@@ -48,6 +48,7 @@ lerna-debug.log*
 
 # AI / Claude
 .claude/
+CLAUDE.md
 
 # Prisma generated
 /generated/prisma
