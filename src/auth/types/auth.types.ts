@@ -1,7 +1,20 @@
-import { type AuthSession } from '../../lib/auth';
+export interface SessionUser {
+  id: string;
+  email: string;
+  name: string;
+  role: string;
+  image?: string | null;
+  emailVerified: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
 
-export type SessionUser = AuthSession['user'] & { role: string };
-export type SessionData = AuthSession['session'];
+export interface SessionData {
+  id: string;
+  userId: string;
+  expiresAt: Date;
+  token: string;
+}
 
 export interface AuthenticatedRequest {
   user: SessionUser;

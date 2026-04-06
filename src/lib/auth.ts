@@ -1,5 +1,3 @@
-import { betterAuth } from 'better-auth';
-import { prismaAdapter } from 'better-auth/adapters/prisma';
 import { PrismaClient } from '@prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
 import pg from 'pg';
@@ -12,63 +10,77 @@ function requireEnv(key: string): string {
   return value;
 }
 
-const pool = new pg.Pool({ connectionString: requireEnv('DATABASE_URL') });
-const adapter = new PrismaPg(pool);
-const prisma = new PrismaClient({ adapter });
+let authInstance: Awaited<ReturnType<typeof createAuth>> | null = null;
 
-export const auth = betterAuth({
-  database: prismaAdapter(prisma, {
-    provider: 'postgresql',
-  }),
-  secret: requireEnv('BETTER_AUTH_SECRET'),
-  baseURL: requireEnv('BETTER_AUTH_URL'),
-  trustedOrigins: [requireEnv('FRONTEND_URL')],
+async function createAuth() {
+  const { betterAuth } = await import('better-auth');
+  const { prismaAdapter } = await import('better-auth/adapters/prisma');
 
-  socialProviders: {
-    google: {
-      clientId: requireEnv('GOOGLE_CLIENT_ID'),
-      clientSecret: requireEnv('GOOGLE_CLIENT_SECRET'),
+  const pool = new pg.Pool({ connectionString: requireEnv('DATABASE_URL') });
+  const adapter = new PrismaPg(pool);
+  const prisma = new PrismaClient({ adapter });
+
+  return betterAuth({
+    database: prismaAdapter(prisma, {
+      provider: 'postgresql',
+    }),
+    secret: requireEnv('BETTER_AUTH_SECRET'),
+    baseURL: requireEnv('BETTER_AUTH_URL'),
+    trustedOrigins: [requireEnv('FRONTEND_URL')],
+
+    socialProviders: {
+      google: {
+        clientId: requireEnv('GOOGLE_CLIENT_ID'),
+        clientSecret: requireEnv('GOOGLE_CLIENT_SECRET'),
+      },
     },
-  },
 
-  session: {
-    expiresIn: 60 * 60 * 24 * 7, // 7 days
-    updateAge: 60 * 60 * 24, // 1 day
-    cookieCache: {
-      enabled: true,
-      maxAge: 60 * 5, // 5 minutes
+    session: {
+      expiresIn: 60 * 60 * 24 * 7,
+      updateAge: 60 * 60 * 24,
+      cookieCache: {
+        enabled: true,
+        maxAge: 60 * 5,
+      },
     },
-  },
 
-  advanced: {
-    defaultCookieAttributes: {
-      sameSite: 'none',
-      secure: true,
+    advanced: {
+      defaultCookieAttributes: {
+        sameSite: 'none',
+        secure: true,
+      },
     },
-  },
 
-  databaseHooks: {
-    user: {
-      create: {
-        before: async (user) => {
-          const adminEmail = process.env.ADMIN_EMAIL;
-          const viewerEmail = process.env.VIEWER_EMAIL;
-          const email = user.email;
+    databaseHooks: {
+      user: {
+        create: {
+          before: async (user) => {
+            const adminEmail = process.env.ADMIN_EMAIL;
+            const viewerEmail = process.env.VIEWER_EMAIL;
+            const email = user.email;
 
-          if (email !== adminEmail && email !== viewerEmail) {
-            return false;
-          }
+            if (email !== adminEmail && email !== viewerEmail) {
+              return false;
+            }
 
-          return {
-            data: {
-              ...user,
-              role: email === adminEmail ? 'ADMIN' : 'VIEWER',
-            },
-          };
+            return {
+              data: {
+                ...user,
+                role: email === adminEmail ? 'ADMIN' : 'VIEWER',
+              },
+            };
+          },
         },
       },
     },
-  },
-});
+  });
+}
 
-export type AuthSession = typeof auth.$Infer.Session;
+export async function getAuth() {
+  if (!authInstance) {
+    authInstance = await createAuth();
+  }
+  return authInstance;
+}
+
+export type AuthInstance = Awaited<ReturnType<typeof createAuth>>;

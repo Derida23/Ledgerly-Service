@@ -6,9 +6,8 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { auth } from '../../lib/auth';
+import { getAuth } from '../../lib/auth';
 import { IS_PUBLIC_KEY } from '../decorators/public.decorator';
-import { fromNodeHeaders } from 'better-auth/node';
 import { type AuthenticatedRequest } from '../types/auth.types';
 
 @Injectable()
@@ -27,8 +26,10 @@ export class SessionGuard implements CanActivate {
 
     const request = context.switchToHttp().getRequest();
 
-    let session: Awaited<ReturnType<typeof auth.api.getSession>>;
+    let session: { user: Record<string, unknown>; session: Record<string, unknown> } | null;
     try {
+      const auth = await getAuth();
+      const { fromNodeHeaders } = await import('better-auth/node');
       session = await auth.api.getSession({
         headers: fromNodeHeaders(request.headers),
       });
@@ -47,8 +48,8 @@ export class SessionGuard implements CanActivate {
     }
 
     const authenticatedReq = request as AuthenticatedRequest;
-    authenticatedReq.user = session.user as AuthenticatedRequest['user'];
-    authenticatedReq.session = session.session;
+    authenticatedReq.user = session.user as unknown as AuthenticatedRequest['user'];
+    authenticatedReq.session = session.session as unknown as AuthenticatedRequest['session'];
 
     return true;
   }
