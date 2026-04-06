@@ -1,0 +1,246 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ============================================================
+// ENUMS
+// ============================================================
+
+enum Role {
+  ADMIN
+  VIEWER
+}
+
+enum TransactionType {
+  INCOME
+  EXPENSE
+  TRANSFER_IN
+  TRANSFER_OUT
+}
+
+enum CategoryType {
+  INCOME
+  EXPENSE
+}
+
+enum PaymentMethod {
+  CASH
+  QRIS
+  TRANSFER
+  DEBIT
+}
+
+enum RecurringType {
+  EXPENSE
+  TRANSFER
+}
+
+// ============================================================
+// BETTER AUTH TABLES (managed by Better Auth)
+// ============================================================
+
+model User {
+  id            String    @id @default(cuid())
+  name          String
+  email         String    @unique
+  emailVerified Boolean   @default(false) @map("email_verified")
+  image         String?
+  role          Role      @default(VIEWER)
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+
+  sessions     Session[]
+  accounts     Account[]
+  wallets      Wallet[]
+  categories   Category[]
+  transactions Transaction[]
+  recurrings   Recurring[]
+  budgets      Budget[]
+
+  @@map("users")
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  expiresAt DateTime @map("expires_at")
+  token     String   @unique
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  ipAddress String?  @map("ip_address")
+  userAgent String?  @map("user_agent")
+
+  userId String @map("user_id")
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("sessions")
+}
+
+model Account {
+  id                    String    @id @default(cuid())
+  accountId             String    @map("account_id")
+  providerId            String    @map("provider_id")
+  accessToken           String?   @map("access_token")
+  refreshToken          String?   @map("refresh_token")
+  idToken               String?   @map("id_token")
+  accessTokenExpiresAt  DateTime? @map("access_token_expires_at")
+  refreshTokenExpiresAt DateTime? @map("refresh_token_expires_at")
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @default(now()) @map("created_at")
+  updatedAt             DateTime  @updatedAt @map("updated_at")
+
+  userId String @map("user_id")
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("accounts")
+}
+
+model Verification {
+  id         String   @id @default(cuid())
+  identifier String
+  value      String
+  expiresAt  DateTime @map("expires_at")
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  @@map("verifications")
+}
+
+// ============================================================
+// APPLICATION TABLES
+// ============================================================
+
+model Wallet {
+  id             String   @id @default(cuid())
+  name           String
+  initialBalance Decimal  @default(0) @map("initial_balance") @db.Decimal(12, 2)
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  userId String @map("user_id")
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  transactions        Transaction[] @relation("WalletTransactions")
+  recurringSource     Recurring[]   @relation("RecurringSource")
+  recurringTarget     Recurring[]   @relation("RecurringTarget")
+
+  @@unique([userId, name])
+  @@index([userId])
+  @@map("wallets")
+}
+
+model Category {
+  id        String       @id @default(cuid())
+  name      String
+  icon      String
+  type      CategoryType
+  createdAt DateTime     @default(now()) @map("created_at")
+  updatedAt DateTime     @updatedAt @map("updated_at")
+
+  userId String @map("user_id")
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  transactions    Transaction[]
+  recurrings      Recurring[]
+  budgetCategories BudgetCategory[]
+
+  @@unique([userId, name, type])
+  @@index([userId])
+  @@map("categories")
+}
+
+model Transaction {
+  id     String          @id @default(cuid())
+  amount Decimal         @db.Decimal(12, 2)
+  type   TransactionType
+  method PaymentMethod?
+  date   DateTime        @default(now())
+  note   String?
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  walletId String @map("wallet_id")
+  wallet   Wallet @relation("WalletTransactions", fields: [walletId], references: [id], onDelete: Restrict)
+
+  categoryId String?   @map("category_id")
+  category   Category? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+
+  userId String @map("user_id")
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Self-relation for transfer pairs
+  transferPairId String?      @unique @map("transfer_pair_id")
+  transferPair   Transaction? @relation("TransferPair", fields: [transferPairId], references: [id])
+  linkedTransfer Transaction? @relation("TransferPair")
+
+  @@index([userId, date])
+  @@index([userId, type, date])
+  @@index([walletId])
+  @@index([categoryId])
+  @@map("transactions")
+}
+
+model Recurring {
+  id         String        @id @default(cuid())
+  name       String
+  type       RecurringType
+  amount     Decimal       @db.Decimal(12, 2)
+  dayOfMonth Int           @map("day_of_month")
+  createdAt  DateTime      @default(now()) @map("created_at")
+  updatedAt  DateTime      @updatedAt @map("updated_at")
+
+  walletId String @map("wallet_id")
+  wallet   Wallet @relation("RecurringSource", fields: [walletId], references: [id], onDelete: Restrict)
+
+  targetWalletId String? @map("target_wallet_id")
+  targetWallet   Wallet? @relation("RecurringTarget", fields: [targetWalletId], references: [id], onDelete: Restrict)
+
+  categoryId String?   @map("category_id")
+  category   Category? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+
+  userId String @map("user_id")
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([walletId])
+  @@index([targetWalletId])
+  @@index([categoryId])
+  @@map("recurrings")
+}
+
+model Budget {
+  id        String   @id @default(cuid())
+  name      String
+  limit     Decimal  @db.Decimal(12, 2)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  userId String @map("user_id")
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  categories BudgetCategory[]
+
+  @@unique([userId, name])
+  @@index([userId])
+  @@map("budgets")
+}
+
+model BudgetCategory {
+  budgetId   String @map("budget_id")
+  categoryId String @map("category_id")
+
+  budget   Budget   @relation(fields: [budgetId], references: [id], onDelete: Cascade)
+  category Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@id([budgetId, categoryId])
+  @@index([budgetId])
+  @@index([categoryId])
+  @@map("budget_categories")
+}
