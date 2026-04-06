@@ -1,6 +1,5 @@
-import 'dotenv/config';
 import { NestFactory } from '@nestjs/core';
-import { Logger, ValidationPipe } from '@nestjs/common';
+import { ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { AppModule } from '../src/app.module';
 import { PrismaExceptionFilter } from '../src/prisma/prisma-exception.filter';
@@ -14,6 +13,7 @@ async function bootstrap(): Promise<INestApplication> {
 
   app = await NestFactory.create(AppModule, {
     bodyParser: false,
+    logger: ['error', 'warn', 'log'],
   });
 
   app.enableCors({
@@ -50,7 +50,15 @@ async function bootstrap(): Promise<INestApplication> {
 }
 
 export default async function handler(req: Request, res: Response) {
-  const app = await bootstrap();
-  const instance = app.getHttpAdapter().getInstance();
-  instance(req, res);
+  try {
+    const nestApp = await bootstrap();
+    const instance = nestApp.getHttpAdapter().getInstance();
+    instance(req, res);
+  } catch (error) {
+    console.error('Bootstrap error:', error);
+    res.status(500).json({
+      statusCode: 500,
+      message: 'Internal server error during bootstrap',
+    });
+  }
 }
