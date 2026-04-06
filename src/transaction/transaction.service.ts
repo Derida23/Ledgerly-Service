@@ -1,6 +1,5 @@
 import {
   BadRequestException,
-  ConflictException,
   Injectable,
   Logger,
   NotFoundException,
@@ -34,7 +33,9 @@ export class TransactionService {
 
   async create(userId: string, dto: CreateTransactionDto) {
     if (dto.type === 'EXPENSE' && !dto.method) {
-      throw new BadRequestException('Metode pembayaran wajib untuk pengeluaran');
+      throw new BadRequestException(
+        'Metode pembayaran wajib untuk pengeluaran',
+      );
     }
 
     return this.prisma.db.transaction.create({
@@ -54,7 +55,9 @@ export class TransactionService {
 
   async createTransfer(userId: string, dto: CreateTransferDto) {
     if (dto.sourceWalletId === dto.targetWalletId) {
-      throw new BadRequestException('Wallet sumber dan tujuan tidak boleh sama');
+      throw new BadRequestException(
+        'Wallet sumber dan tujuan tidak boleh sama',
+      );
     }
 
     const date = dto.date ? new Date(dto.date) : new Date();
@@ -183,7 +186,7 @@ export class TransactionService {
       throw new NotFoundException('Transaksi tidak ditemukan');
     }
 
-    const { userId: _, ...rest } = transaction;
+    const { userId: _userId, ...rest } = transaction;
     return rest;
   }
 

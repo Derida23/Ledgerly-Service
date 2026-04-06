@@ -1,5 +1,12 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { ArrayMinSize, IsArray, IsNotEmpty, IsNumber, IsString, Min } from 'class-validator';
+import {
+  ArrayMinSize,
+  IsArray,
+  IsNotEmpty,
+  IsNumber,
+  IsString,
+  Min,
+} from 'class-validator';
 
 export class CreateBudgetDto {
   @ApiProperty({ description: 'Nama budget', example: 'Budget Bulanan' })
@@ -7,7 +14,10 @@ export class CreateBudgetDto {
   @IsNotEmpty()
   name!: string;
 
-  @ApiProperty({ description: 'Limit budget per bulan (IDR)', example: 1000000 })
+  @ApiProperty({
+    description: 'Limit budget per bulan (IDR)',
+    example: 1000000,
+  })
   @IsNumber()
   @Min(1)
   limit!: number;

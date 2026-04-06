@@ -54,7 +54,7 @@ async function createAuth() {
     databaseHooks: {
       user: {
         create: {
-          before: async (user) => {
+          before: (user) => {
             const adminEmail = process.env.ADMIN_EMAIL;
             const viewerEmail = process.env.VIEWER_EMAIL;
             const email = user.email;

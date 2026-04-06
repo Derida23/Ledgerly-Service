@@ -1,5 +1,14 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsEnum, IsInt, IsNotEmpty, IsNumber, IsOptional, IsString, Max, Min } from 'class-validator';
+import {
+  IsEnum,
+  IsInt,
+  IsNotEmpty,
+  IsNumber,
+  IsOptional,
+  IsString,
+  Max,
+  Min,
+} from 'class-validator';
 
 export class CreateRecurringDto {
   @ApiProperty({ description: 'Nama reminder', example: 'Listrik' })
@@ -31,12 +40,18 @@ export class CreateRecurringDto {
   @IsNotEmpty()
   walletId!: string;
 
-  @ApiPropertyOptional({ description: 'ID wallet tujuan (untuk transfer)', example: 'clx...' })
+  @ApiPropertyOptional({
+    description: 'ID wallet tujuan (untuk transfer)',
+    example: 'clx...',
+  })
   @IsOptional()
   @IsString()
   targetWalletId?: string;
 
-  @ApiPropertyOptional({ description: 'ID kategori (untuk expense)', example: 'clx...' })
+  @ApiPropertyOptional({
+    description: 'ID kategori (untuk expense)',
+    example: 'clx...',
+  })
   @IsOptional()
   @IsString()
   categoryId?: string;

@@ -44,12 +44,15 @@ export class ReportService {
       ]);
 
       result.comparison = {
-        incomeChange: prevIncome > 0
-          ? Math.round(((income - prevIncome) / prevIncome) * 100 * 10) / 10
-          : 0,
-        expenseChange: prevExpense > 0
-          ? Math.round(((expense - prevExpense) / prevExpense) * 100 * 10) / 10
-          : 0,
+        incomeChange:
+          prevIncome > 0
+            ? Math.round(((income - prevIncome) / prevIncome) * 100 * 10) / 10
+            : 0,
+        expenseChange:
+          prevExpense > 0
+            ? Math.round(((expense - prevExpense) / prevExpense) * 100 * 10) /
+              10
+            : 0,
       };
     }
 
@@ -151,10 +154,16 @@ export class ReportService {
     });
 
     const walletMap = new Map(wallets.map((w) => [w.id, w]));
-    const breakdown = new Map<string, { totalExpense: number; totalIncome: number }>();
+    const breakdown = new Map<
+      string,
+      { totalExpense: number; totalIncome: number }
+    >();
 
     for (const g of groups) {
-      const existing = breakdown.get(g.walletId) ?? { totalExpense: 0, totalIncome: 0 };
+      const existing = breakdown.get(g.walletId) ?? {
+        totalExpense: 0,
+        totalIncome: 0,
+      };
       const amount = Number(g._sum.amount ?? 0);
       if (g.type === 'EXPENSE') {
         existing.totalExpense += amount;
@@ -209,7 +218,15 @@ export class ReportService {
 
     for (let i = 11; i >= 0; i--) {
       const start = new Date(now.getFullYear(), now.getMonth() - i, 1);
-      const end = new Date(now.getFullYear(), now.getMonth() - i + 1, 0, 23, 59, 59, 999);
+      const end = new Date(
+        now.getFullYear(),
+        now.getMonth() - i + 1,
+        0,
+        23,
+        59,
+        59,
+        999,
+      );
       const monthStr = `${start.getFullYear()}-${String(start.getMonth() + 1).padStart(2, '0')}`;
 
       const [income, expense] = await Promise.all([
@@ -242,7 +259,15 @@ export class ReportService {
       }
       case 'monthly': {
         const startDate = new Date(now.getFullYear(), now.getMonth(), 1);
-        const endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
+        const endDate = new Date(
+          now.getFullYear(),
+          now.getMonth() + 1,
+          0,
+          23,
+          59,
+          59,
+          999,
+        );
         return { startDate, endDate };
       }
       case 'yearly': {

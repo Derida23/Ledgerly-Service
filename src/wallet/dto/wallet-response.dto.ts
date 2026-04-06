@@ -12,7 +12,8 @@ export class WalletResponseDto {
 
   @ApiProperty({
     example: 4500000,
-    description: 'Saldo saat ini = saldo awal + pemasukan + transfer masuk - pengeluaran - transfer keluar',
+    description:
+      'Saldo saat ini = saldo awal + pemasukan + transfer masuk - pengeluaran - transfer keluar',
   })
   balance!: number;
 

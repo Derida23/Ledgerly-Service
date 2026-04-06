@@ -34,19 +34,24 @@ export class CategoryController {
   @Roles('ADMIN')
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({ summary: 'Buat kategori custom baru' })
-  @ApiResponse({ status: 201, description: 'Kategori berhasil dibuat', type: CategoryResponseDto })
+  @ApiResponse({
+    status: 201,
+    description: 'Kategori berhasil dibuat',
+    type: CategoryResponseDto,
+  })
   @ApiResponse({ status: 409, description: 'Nama kategori sudah ada' })
-  create(
-    @CurrentUser() user: { id: string },
-    @Body() dto: CreateCategoryDto,
-  ) {
+  create(@CurrentUser() user: { id: string }, @Body() dto: CreateCategoryDto) {
     return this.categoryService.create(user.id, dto);
   }
 
   @Get()
   @ApiOperation({ summary: 'List semua kategori (filter by type opsional)' })
   @ApiQuery({ name: 'type', required: false, enum: ['INCOME', 'EXPENSE'] })
-  @ApiResponse({ status: 200, description: 'Daftar kategori', type: [CategoryResponseDto] })
+  @ApiResponse({
+    status: 200,
+    description: 'Daftar kategori',
+    type: [CategoryResponseDto],
+  })
   findAll(
     @CurrentUser() user: { id: string },
     @Query('type') type?: 'INCOME' | 'EXPENSE',
@@ -56,19 +61,24 @@ export class CategoryController {
 
   @Get(':id')
   @ApiOperation({ summary: 'Detail kategori' })
-  @ApiResponse({ status: 200, description: 'Detail kategori', type: CategoryResponseDto })
+  @ApiResponse({
+    status: 200,
+    description: 'Detail kategori',
+    type: CategoryResponseDto,
+  })
   @ApiResponse({ status: 404, description: 'Kategori tidak ditemukan' })
-  findOne(
-    @Param('id') id: string,
-    @CurrentUser() user: { id: string },
-  ) {
+  findOne(@Param('id') id: string, @CurrentUser() user: { id: string }) {
     return this.categoryService.findOne(id, user.id);
   }
 
   @Patch(':id')
   @Roles('ADMIN')
   @ApiOperation({ summary: 'Update nama atau ikon kategori' })
-  @ApiResponse({ status: 200, description: 'Kategori berhasil diupdate', type: CategoryResponseDto })
+  @ApiResponse({
+    status: 200,
+    description: 'Kategori berhasil diupdate',
+    type: CategoryResponseDto,
+  })
   @ApiResponse({ status: 404, description: 'Kategori tidak ditemukan' })
   @ApiResponse({ status: 409, description: 'Nama kategori sudah ada' })
   update(
@@ -82,22 +92,26 @@ export class CategoryController {
   @Delete(':id')
   @Roles('ADMIN')
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Hapus kategori (gagal jika masih digunakan transaksi)' })
+  @ApiOperation({
+    summary: 'Hapus kategori (gagal jika masih digunakan transaksi)',
+  })
   @ApiResponse({ status: 200, description: 'Kategori berhasil dihapus' })
   @ApiResponse({ status: 404, description: 'Kategori tidak ditemukan' })
   @ApiResponse({ status: 409, description: 'Kategori masih digunakan' })
-  remove(
-    @Param('id') id: string,
-    @CurrentUser() user: { id: string },
-  ) {
+  remove(@Param('id') id: string, @CurrentUser() user: { id: string }) {
     return this.categoryService.remove(id, user.id);
   }
 
   @Post('seed')
   @Roles('ADMIN')
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Seed default kategori untuk user (skip jika sudah ada)' })
-  @ApiResponse({ status: 200, description: 'Default kategori berhasil di-seed' })
+  @ApiOperation({
+    summary: 'Seed default kategori untuk user (skip jika sudah ada)',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Default kategori berhasil di-seed',
+  })
   async seed(@CurrentUser() user: { id: string }) {
     await this.categoryService.seedDefaults(user.id);
     return { message: 'Default kategori berhasil di-seed' };

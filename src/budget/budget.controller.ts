@@ -32,37 +32,49 @@ export class BudgetController {
   @Roles('ADMIN')
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({ summary: 'Buat budget baru dengan kategori terpilih' })
-  @ApiResponse({ status: 201, description: 'Budget berhasil dibuat', type: BudgetResponseDto })
+  @ApiResponse({
+    status: 201,
+    description: 'Budget berhasil dibuat',
+    type: BudgetResponseDto,
+  })
   @ApiResponse({ status: 409, description: 'Nama budget sudah ada' })
-  create(
-    @CurrentUser() user: { id: string },
-    @Body() dto: CreateBudgetDto,
-  ) {
+  create(@CurrentUser() user: { id: string }, @Body() dto: CreateBudgetDto) {
     return this.budgetService.create(user.id, dto);
   }
 
   @Get()
-  @ApiOperation({ summary: 'List semua budget dengan status spending bulan ini' })
-  @ApiResponse({ status: 200, description: 'Daftar budget', type: [BudgetResponseDto] })
+  @ApiOperation({
+    summary: 'List semua budget dengan status spending bulan ini',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Daftar budget',
+    type: [BudgetResponseDto],
+  })
   findAll(@CurrentUser() user: { id: string }) {
     return this.budgetService.findAll(user.id);
   }
 
   @Get(':id')
   @ApiOperation({ summary: 'Detail budget dengan spending bulan ini' })
-  @ApiResponse({ status: 200, description: 'Detail budget', type: BudgetResponseDto })
+  @ApiResponse({
+    status: 200,
+    description: 'Detail budget',
+    type: BudgetResponseDto,
+  })
   @ApiResponse({ status: 404, description: 'Budget tidak ditemukan' })
-  findOne(
-    @Param('id') id: string,
-    @CurrentUser() user: { id: string },
-  ) {
+  findOne(@Param('id') id: string, @CurrentUser() user: { id: string }) {
     return this.budgetService.findOne(id, user.id);
   }
 
   @Patch(':id')
   @Roles('ADMIN')
   @ApiOperation({ summary: 'Update budget (nama, limit, atau kategori)' })
-  @ApiResponse({ status: 200, description: 'Budget berhasil diupdate', type: BudgetResponseDto })
+  @ApiResponse({
+    status: 200,
+    description: 'Budget berhasil diupdate',
+    type: BudgetResponseDto,
+  })
   @ApiResponse({ status: 404, description: 'Budget tidak ditemukan' })
   @ApiResponse({ status: 409, description: 'Nama budget sudah ada' })
   update(
@@ -79,10 +91,7 @@ export class BudgetController {
   @ApiOperation({ summary: 'Hapus budget' })
   @ApiResponse({ status: 200, description: 'Budget berhasil dihapus' })
   @ApiResponse({ status: 404, description: 'Budget tidak ditemukan' })
-  remove(
-    @Param('id') id: string,
-    @CurrentUser() user: { id: string },
-  ) {
+  remove(@Param('id') id: string, @CurrentUser() user: { id: string }) {
     return this.budgetService.remove(id, user.id);
   }
 }

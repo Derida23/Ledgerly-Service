@@ -58,12 +58,25 @@ export class BudgetService {
 
     const now = new Date();
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-    const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
+    const endOfMonth = new Date(
+      now.getFullYear(),
+      now.getMonth() + 1,
+      0,
+      23,
+      59,
+      59,
+      999,
+    );
 
     return Promise.all(
       budgets.map(async (budget) => {
         const categoryIds = budget.categories.map((c) => c.category.id);
-        const spent = await this.calculateSpent(userId, categoryIds, startOfMonth, endOfMonth);
+        const spent = await this.calculateSpent(
+          userId,
+          categoryIds,
+          startOfMonth,
+          endOfMonth,
+        );
         return this.formatBudgetResponse(budget, spent);
       }),
     );
@@ -93,10 +106,23 @@ export class BudgetService {
 
     const now = new Date();
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-    const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
+    const endOfMonth = new Date(
+      now.getFullYear(),
+      now.getMonth() + 1,
+      0,
+      23,
+      59,
+      59,
+      999,
+    );
 
     const categoryIds = budget.categories.map((c) => c.category.id);
-    const spent = await this.calculateSpent(userId, categoryIds, startOfMonth, endOfMonth);
+    const spent = await this.calculateSpent(
+      userId,
+      categoryIds,
+      startOfMonth,
+      endOfMonth,
+    );
 
     return this.formatBudgetResponse(budget, spent);
   }

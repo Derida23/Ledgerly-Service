@@ -10,7 +10,10 @@ export class TransactionResponseDto {
   @ApiProperty({ enum: ['INCOME', 'EXPENSE', 'TRANSFER_IN', 'TRANSFER_OUT'] })
   type!: string;
 
-  @ApiPropertyOptional({ enum: ['CASH', 'QRIS', 'TRANSFER', 'DEBIT'], nullable: true })
+  @ApiPropertyOptional({
+    enum: ['CASH', 'QRIS', 'TRANSFER', 'DEBIT'],
+    nullable: true,
+  })
   method!: string | null;
 
   @ApiProperty({ example: '2024-01-15T00:00:00.000Z' })

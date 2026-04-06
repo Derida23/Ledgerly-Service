@@ -111,7 +111,11 @@ describe('BudgetService', () => {
       );
 
       await expect(
-        service.create(userId, { name: 'Monthly', limit: 1000000, categoryIds: ['c1'] }),
+        service.create(userId, {
+          name: 'Monthly',
+          limit: 1000000,
+          categoryIds: ['c1'],
+        }),
       ).rejects.toThrow(ConflictException);
     });
   });

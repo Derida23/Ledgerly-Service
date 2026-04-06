@@ -32,44 +32,58 @@ export class RecurringController {
   @Roles('ADMIN')
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({ summary: 'Buat reminder recurring baru' })
-  @ApiResponse({ status: 201, description: 'Recurring berhasil dibuat', type: RecurringResponseDto })
+  @ApiResponse({
+    status: 201,
+    description: 'Recurring berhasil dibuat',
+    type: RecurringResponseDto,
+  })
   @ApiResponse({ status: 400, description: 'Validasi gagal' })
-  create(
-    @CurrentUser() user: { id: string },
-    @Body() dto: CreateRecurringDto,
-  ) {
+  create(@CurrentUser() user: { id: string }, @Body() dto: CreateRecurringDto) {
     return this.recurringService.create(user.id, dto);
   }
 
   @Get()
   @ApiOperation({ summary: 'List semua recurring reminder' })
-  @ApiResponse({ status: 200, description: 'Daftar recurring', type: [RecurringResponseDto] })
+  @ApiResponse({
+    status: 200,
+    description: 'Daftar recurring',
+    type: [RecurringResponseDto],
+  })
   findAll(@CurrentUser() user: { id: string }) {
     return this.recurringService.findAll(user.id);
   }
 
   @Get('due-today')
   @ApiOperation({ summary: 'List recurring yang jatuh tempo hari ini' })
-  @ApiResponse({ status: 200, description: 'Recurring jatuh tempo hari ini', type: [RecurringResponseDto] })
+  @ApiResponse({
+    status: 200,
+    description: 'Recurring jatuh tempo hari ini',
+    type: [RecurringResponseDto],
+  })
   findDueToday(@CurrentUser() user: { id: string }) {
     return this.recurringService.findDueToday(user.id);
   }
 
   @Get(':id')
   @ApiOperation({ summary: 'Detail recurring' })
-  @ApiResponse({ status: 200, description: 'Detail recurring', type: RecurringResponseDto })
+  @ApiResponse({
+    status: 200,
+    description: 'Detail recurring',
+    type: RecurringResponseDto,
+  })
   @ApiResponse({ status: 404, description: 'Recurring tidak ditemukan' })
-  findOne(
-    @Param('id') id: string,
-    @CurrentUser() user: { id: string },
-  ) {
+  findOne(@Param('id') id: string, @CurrentUser() user: { id: string }) {
     return this.recurringService.findOne(id, user.id);
   }
 
   @Patch(':id')
   @Roles('ADMIN')
   @ApiOperation({ summary: 'Update recurring' })
-  @ApiResponse({ status: 200, description: 'Recurring berhasil diupdate', type: RecurringResponseDto })
+  @ApiResponse({
+    status: 200,
+    description: 'Recurring berhasil diupdate',
+    type: RecurringResponseDto,
+  })
   @ApiResponse({ status: 404, description: 'Recurring tidak ditemukan' })
   update(
     @Param('id') id: string,
@@ -85,10 +99,7 @@ export class RecurringController {
   @ApiOperation({ summary: 'Hapus recurring' })
   @ApiResponse({ status: 200, description: 'Recurring berhasil dihapus' })
   @ApiResponse({ status: 404, description: 'Recurring tidak ditemukan' })
-  remove(
-    @Param('id') id: string,
-    @CurrentUser() user: { id: string },
-  ) {
+  remove(@Param('id') id: string, @CurrentUser() user: { id: string }) {
     return this.recurringService.remove(id, user.id);
   }
 }

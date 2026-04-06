@@ -86,7 +86,7 @@ export class WalletService {
         wallet.initialBalance,
         wallet.transactions,
       );
-      const { transactions: _, ...rest } = wallet;
+      const { transactions: _transactions, ...rest } = wallet;
       return { ...rest, balance };
     });
   }
@@ -118,7 +118,7 @@ export class WalletService {
       wallet.initialBalance,
       wallet.transactions,
     );
-    const { transactions: _, userId: __, ...rest } = wallet;
+    const { transactions: _transactions, userId: _userId, ...rest } = wallet;
     return { ...rest, balance };
   }
 

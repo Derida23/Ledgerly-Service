@@ -1,6 +1,6 @@
 import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
-import { createTestApp, cleanDatabase, setTestUser, getTestUser } from './test-helpers';
+import { createTestApp, cleanDatabase, setTestUser } from './test-helpers';
 
 describe('Wallets (e2e)', () => {
   let app: INestApplication;
@@ -86,9 +86,7 @@ describe('Wallets (e2e)', () => {
 
     it('should allow VIEWER role', () => {
       setTestUser('VIEWER');
-      return request(app.getHttpServer())
-        .get('/api/wallets')
-        .expect(200);
+      return request(app.getHttpServer()).get('/api/wallets').expect(200);
     });
   });
 
@@ -134,16 +132,16 @@ describe('Wallets (e2e)', () => {
 
   describe('POST /api/wallets/seed', () => {
     it('should seed 7 default wallets', async () => {
-      await request(app.getHttpServer())
-        .post('/api/wallets/seed')
-        .expect(200);
+      await request(app.getHttpServer()).post('/api/wallets/seed').expect(200);
 
       const res = await request(app.getHttpServer())
         .get('/api/wallets')
         .expect(200);
 
       expect(res.body).toHaveLength(7);
-      expect(res.body.map((w: { name: string }) => w.name)).toContain('Bank Mandiri');
+      expect(res.body.map((w: { name: string }) => w.name)).toContain(
+        'Bank Mandiri',
+      );
       expect(res.body.map((w: { name: string }) => w.name)).toContain('Bibit');
     });
   });

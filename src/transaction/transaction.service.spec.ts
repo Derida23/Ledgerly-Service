@@ -109,10 +109,7 @@ describe('TransactionService', () => {
 
   describe('findAll', () => {
     it('should return paginated results', async () => {
-      mockDb().$transaction.mockResolvedValue([
-        [{ id: 't1' }],
-        1,
-      ]);
+      mockDb().$transaction.mockResolvedValue([[{ id: 't1' }], 1]);
 
       const result = await service.findAll(userId, { page: '1', limit: '20' });
 

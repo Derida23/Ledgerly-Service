@@ -24,9 +24,14 @@ export class SessionGuard implements CanActivate {
 
     if (isPublic) return true;
 
-    const request = context.switchToHttp().getRequest();
+    const request = context.switchToHttp().getRequest<{
+      headers: Record<string, string | string[] | undefined>;
+    }>();
 
-    let session: { user: Record<string, unknown>; session: Record<string, unknown> } | null;
+    let session: {
+      user: Record<string, unknown>;
+      session: Record<string, unknown>;
+    } | null;
     try {
       const auth = await getAuth();
       const { fromNodeHeaders } = await import('better-auth/node');
@@ -48,8 +53,10 @@ export class SessionGuard implements CanActivate {
     }
 
     const authenticatedReq = request as AuthenticatedRequest;
-    authenticatedReq.user = session.user as unknown as AuthenticatedRequest['user'];
-    authenticatedReq.session = session.session as unknown as AuthenticatedRequest['session'];
+    authenticatedReq.user =
+      session.user as unknown as AuthenticatedRequest['user'];
+    authenticatedReq.session =
+      session.session as unknown as AuthenticatedRequest['session'];
 
     return true;
   }

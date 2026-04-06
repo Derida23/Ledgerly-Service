@@ -31,7 +31,10 @@ export class UpdateTransactionDto {
   @IsEnum({ CASH: 'CASH', QRIS: 'QRIS', TRANSFER: 'TRANSFER', DEBIT: 'DEBIT' })
   method?: 'CASH' | 'QRIS' | 'TRANSFER' | 'DEBIT';
 
-  @ApiPropertyOptional({ description: 'Tanggal transaksi', example: '2024-01-15' })
+  @ApiPropertyOptional({
+    description: 'Tanggal transaksi',
+    example: '2024-01-15',
+  })
   @IsOptional()
   @IsDateString()
   date?: string;

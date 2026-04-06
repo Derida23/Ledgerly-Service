@@ -154,9 +154,13 @@ describe('Transactions (e2e)', () => {
       await request(app.getHttpServer())
         .post('/api/transactions')
         .send({ amount: 50000, type: 'INCOME', walletId, categoryId });
-      await request(app.getHttpServer())
-        .post('/api/transactions')
-        .send({ amount: 30000, type: 'EXPENSE', walletId, categoryId, method: 'CASH' });
+      await request(app.getHttpServer()).post('/api/transactions').send({
+        amount: 30000,
+        type: 'EXPENSE',
+        walletId,
+        categoryId,
+        method: 'CASH',
+      });
 
       const res = await request(app.getHttpServer())
         .get('/api/transactions?type=INCOME')

@@ -32,37 +32,47 @@ export class WalletController {
   @Roles('ADMIN')
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({ summary: 'Buat wallet baru' })
-  @ApiResponse({ status: 201, description: 'Wallet berhasil dibuat', type: WalletResponseDto })
+  @ApiResponse({
+    status: 201,
+    description: 'Wallet berhasil dibuat',
+    type: WalletResponseDto,
+  })
   @ApiResponse({ status: 409, description: 'Nama wallet sudah ada' })
-  create(
-    @CurrentUser() user: { id: string },
-    @Body() dto: CreateWalletDto,
-  ) {
+  create(@CurrentUser() user: { id: string }, @Body() dto: CreateWalletDto) {
     return this.walletService.create(user.id, dto);
   }
 
   @Get()
   @ApiOperation({ summary: 'List semua wallet dengan saldo' })
-  @ApiResponse({ status: 200, description: 'Daftar wallet', type: [WalletResponseDto] })
+  @ApiResponse({
+    status: 200,
+    description: 'Daftar wallet',
+    type: [WalletResponseDto],
+  })
   findAll(@CurrentUser() user: { id: string }) {
     return this.walletService.findAll(user.id);
   }
 
   @Get(':id')
   @ApiOperation({ summary: 'Detail wallet dengan saldo' })
-  @ApiResponse({ status: 200, description: 'Detail wallet', type: WalletResponseDto })
+  @ApiResponse({
+    status: 200,
+    description: 'Detail wallet',
+    type: WalletResponseDto,
+  })
   @ApiResponse({ status: 404, description: 'Wallet tidak ditemukan' })
-  findOne(
-    @Param('id') id: string,
-    @CurrentUser() user: { id: string },
-  ) {
+  findOne(@Param('id') id: string, @CurrentUser() user: { id: string }) {
     return this.walletService.findOne(id, user.id);
   }
 
   @Patch(':id')
   @Roles('ADMIN')
   @ApiOperation({ summary: 'Update nama atau saldo awal wallet' })
-  @ApiResponse({ status: 200, description: 'Wallet berhasil diupdate', type: WalletResponseDto })
+  @ApiResponse({
+    status: 200,
+    description: 'Wallet berhasil diupdate',
+    type: WalletResponseDto,
+  })
   @ApiResponse({ status: 404, description: 'Wallet tidak ditemukan' })
   @ApiResponse({ status: 409, description: 'Nama wallet sudah ada' })
   update(
@@ -80,10 +90,7 @@ export class WalletController {
   @ApiResponse({ status: 200, description: 'Wallet berhasil dihapus' })
   @ApiResponse({ status: 404, description: 'Wallet tidak ditemukan' })
   @ApiResponse({ status: 409, description: 'Wallet masih memiliki transaksi' })
-  remove(
-    @Param('id') id: string,
-    @CurrentUser() user: { id: string },
-  ) {
+  remove(@Param('id') id: string, @CurrentUser() user: { id: string }) {
     return this.walletService.remove(id, user.id);
   }
 

@@ -25,7 +25,12 @@ describe('WalletService', () => {
   describe('create', () => {
     it('should create a wallet', async () => {
       const dto = { name: 'Bank BCA', initialBalance: 5000000 };
-      const expected = { id: 'w1', ...dto, createdAt: new Date(), updatedAt: new Date() };
+      const expected = {
+        id: 'w1',
+        ...dto,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
       mockDb().wallet.create.mockResolvedValue(expected);
 
       const result = await service.create(userId, dto);

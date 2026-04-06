@@ -32,7 +32,10 @@ describe('CategoryService', () => {
       expect(mockDb().category.createMany).toHaveBeenCalledWith(
         expect.objectContaining({
           data: expect.arrayContaining([
-            expect.objectContaining({ name: 'Makanan & Minuman', type: 'EXPENSE' }),
+            expect.objectContaining({
+              name: 'Makanan & Minuman',
+              type: 'EXPENSE',
+            }),
             expect.objectContaining({ name: 'Gaji', type: 'INCOME' }),
           ]),
         }),
@@ -51,7 +54,12 @@ describe('CategoryService', () => {
   describe('create', () => {
     it('should create a category', async () => {
       const dto = { name: 'Custom', icon: '⭐', type: 'EXPENSE' as const };
-      const expected = { id: 'c1', ...dto, createdAt: new Date(), updatedAt: new Date() };
+      const expected = {
+        id: 'c1',
+        ...dto,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
       mockDb().category.create.mockResolvedValue(expected);
 
       const result = await service.create(userId, dto);

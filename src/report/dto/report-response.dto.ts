@@ -24,10 +24,16 @@ export class WalletBreakdownDto {
   @ApiProperty({ example: 'Bank Mandiri' })
   walletName!: string;
 
-  @ApiProperty({ example: 500000, description: 'Total pengeluaran dari wallet ini' })
+  @ApiProperty({
+    example: 500000,
+    description: 'Total pengeluaran dari wallet ini',
+  })
   totalExpense!: number;
 
-  @ApiProperty({ example: 8500000, description: 'Total pemasukan ke wallet ini' })
+  @ApiProperty({
+    example: 8500000,
+    description: 'Total pemasukan ke wallet ini',
+  })
   totalIncome!: number;
 }
 
@@ -69,7 +75,10 @@ export class ReportResponseDto {
   @ApiProperty({ example: 3200000 })
   totalExpense!: number;
 
-  @ApiProperty({ example: 5300000, description: 'Surplus (positif) atau defisit (negatif)' })
+  @ApiProperty({
+    example: 5300000,
+    description: 'Surplus (positif) atau defisit (negatif)',
+  })
   balance!: number;
 
   @ApiProperty({ type: [CategoryBreakdownDto] })
@@ -92,6 +101,9 @@ export class DashboardResponseDto {
   @ApiProperty({ type: [WalletBalanceDto] })
   wallets!: WalletBalanceDto[];
 
-  @ApiProperty({ type: [MonthlyTrendDto], description: 'Tren 12 bulan terakhir' })
+  @ApiProperty({
+    type: [MonthlyTrendDto],
+    description: 'Tren 12 bulan terakhir',
+  })
   monthlyTrend!: MonthlyTrendDto[];
 }

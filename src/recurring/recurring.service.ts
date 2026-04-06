@@ -3,7 +3,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { Prisma, RecurringType } from '@prisma/client';
+import { RecurringType } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateRecurringDto } from './dto/create-recurring.dto';
 import { UpdateRecurringDto } from './dto/update-recurring.dto';
@@ -66,7 +66,7 @@ export class RecurringService {
       throw new NotFoundException('Recurring tidak ditemukan');
     }
 
-    const { userId: _, ...rest } = recurring;
+    const { userId: _userId, ...rest } = recurring;
     return rest;
   }
 
@@ -80,7 +80,9 @@ export class RecurringService {
         ...(dto.amount !== undefined && { amount: dto.amount }),
         ...(dto.dayOfMonth !== undefined && { dayOfMonth: dto.dayOfMonth }),
         ...(dto.walletId !== undefined && { walletId: dto.walletId }),
-        ...(dto.targetWalletId !== undefined && { targetWalletId: dto.targetWalletId }),
+        ...(dto.targetWalletId !== undefined && {
+          targetWalletId: dto.targetWalletId,
+        }),
         ...(dto.categoryId !== undefined && { categoryId: dto.categoryId }),
       },
       select: RECURRING_SELECT,

@@ -1,14 +1,28 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { ArrayMinSize, IsArray, IsNotEmpty, IsNumber, IsOptional, IsString, Min } from 'class-validator';
+import {
+  ArrayMinSize,
+  IsArray,
+  IsNotEmpty,
+  IsNumber,
+  IsOptional,
+  IsString,
+  Min,
+} from 'class-validator';
 
 export class UpdateBudgetDto {
-  @ApiPropertyOptional({ description: 'Nama budget', example: 'Budget Bulanan' })
+  @ApiPropertyOptional({
+    description: 'Nama budget',
+    example: 'Budget Bulanan',
+  })
   @IsOptional()
   @IsString()
   @IsNotEmpty()
   name?: string;
 
-  @ApiPropertyOptional({ description: 'Limit budget per bulan (IDR)', example: 1000000 })
+  @ApiPropertyOptional({
+    description: 'Limit budget per bulan (IDR)',
+    example: 1000000,
+  })
   @IsOptional()
   @IsNumber()
   @Min(1)

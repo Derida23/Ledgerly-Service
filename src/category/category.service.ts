@@ -112,7 +112,7 @@ export class CategoryService {
       throw new NotFoundException('Kategori tidak ditemukan');
     }
 
-    const { userId: _, ...rest } = category;
+    const { userId: _userId, ...rest } = category;
     return rest;
   }
 

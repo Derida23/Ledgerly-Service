@@ -38,8 +38,15 @@ export class TransactionController {
   @Roles('ADMIN')
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({ summary: 'Buat transaksi baru (pemasukan/pengeluaran)' })
-  @ApiResponse({ status: 201, description: 'Transaksi berhasil dibuat', type: TransactionResponseDto })
-  @ApiResponse({ status: 400, description: 'Validasi gagal (method wajib untuk expense)' })
+  @ApiResponse({
+    status: 201,
+    description: 'Transaksi berhasil dibuat',
+    type: TransactionResponseDto,
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Validasi gagal (method wajib untuk expense)',
+  })
   create(
     @CurrentUser() user: { id: string },
     @Body() dto: CreateTransactionDto,
@@ -51,9 +58,14 @@ export class TransactionController {
   @Roles('ADMIN')
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({
-    summary: 'Buat transfer antar wallet (otomatis 3 record: keluar + masuk + biaya admin)',
+    summary:
+      'Buat transfer antar wallet (otomatis 3 record: keluar + masuk + biaya admin)',
   })
-  @ApiResponse({ status: 201, description: 'Transfer berhasil dibuat', type: [TransactionResponseDto] })
+  @ApiResponse({
+    status: 201,
+    description: 'Transfer berhasil dibuat',
+    type: [TransactionResponseDto],
+  })
   @ApiResponse({ status: 400, description: 'Wallet sumber dan tujuan sama' })
   createTransfer(
     @CurrentUser() user: { id: string },
@@ -64,7 +76,11 @@ export class TransactionController {
 
   @Get()
   @ApiOperation({ summary: 'List transaksi (filter, pagination)' })
-  @ApiResponse({ status: 200, description: 'Daftar transaksi', type: PaginatedTransactionResponseDto })
+  @ApiResponse({
+    status: 200,
+    description: 'Daftar transaksi',
+    type: PaginatedTransactionResponseDto,
+  })
   findAll(
     @CurrentUser() user: { id: string },
     @Query() query: QueryTransactionDto,
@@ -74,12 +90,13 @@ export class TransactionController {
 
   @Get(':id')
   @ApiOperation({ summary: 'Detail transaksi' })
-  @ApiResponse({ status: 200, description: 'Detail transaksi', type: TransactionResponseDto })
+  @ApiResponse({
+    status: 200,
+    description: 'Detail transaksi',
+    type: TransactionResponseDto,
+  })
   @ApiResponse({ status: 404, description: 'Transaksi tidak ditemukan' })
-  findOne(
-    @Param('id') id: string,
-    @CurrentUser() user: { id: string },
-  ) {
+  findOne(@Param('id') id: string, @CurrentUser() user: { id: string }) {
     return this.transactionService.findOne(id, user.id);
   }
 
@@ -88,7 +105,11 @@ export class TransactionController {
   @ApiOperation({
     summary: 'Update transaksi (transfer pair otomatis ikut terupdate)',
   })
-  @ApiResponse({ status: 200, description: 'Transaksi berhasil diupdate', type: TransactionResponseDto })
+  @ApiResponse({
+    status: 200,
+    description: 'Transaksi berhasil diupdate',
+    type: TransactionResponseDto,
+  })
   @ApiResponse({ status: 404, description: 'Transaksi tidak ditemukan' })
   update(
     @Param('id') id: string,
@@ -106,10 +127,7 @@ export class TransactionController {
   })
   @ApiResponse({ status: 200, description: 'Transaksi berhasil dihapus' })
   @ApiResponse({ status: 404, description: 'Transaksi tidak ditemukan' })
-  remove(
-    @Param('id') id: string,
-    @CurrentUser() user: { id: string },
-  ) {
+  remove(@Param('id') id: string, @CurrentUser() user: { id: string }) {
     return this.transactionService.remove(id, user.id);
   }
 }
