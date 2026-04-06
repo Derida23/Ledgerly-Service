@@ -52,4 +52,7 @@ lerna-debug.log*
 # Prisma generated
 /generated/prisma
 
+# TypeScript build info
+*.tsbuildinfo
+
 /generated/prisma
