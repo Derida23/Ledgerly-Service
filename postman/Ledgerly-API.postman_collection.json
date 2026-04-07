@@ -39,6 +39,11 @@
       "key": "budgetId",
       "value": "",
       "type": "string"
+    },
+    {
+      "key": "googleOAuthUrl",
+      "value": "",
+      "type": "string"
     }
   ],
   "item": [
@@ -53,26 +58,40 @@
           }
         },
         {
-          "name": "Get Session",
+          "name": "1. Get Google OAuth URL",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.url) {",
+                  "  pm.collectionVariables.set('googleOAuthUrl', res.url);",
+                  "  console.log('=== OPEN THIS URL IN BROWSER ===');",
+                  "  console.log(res.url);",
+                  "  console.log('================================');",
+                  "}"
+                ]
+              }
+            }
+          ],
           "request": {
-            "method": "GET",
-            "url": "{{baseUrl}}/api/auth/session"
+            "method": "POST",
+            "url": "{{baseUrl}}/api/auth/sign-in/social",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"provider\": \"google\",\n  \"callbackURL\": \"{{baseUrl}}/\"\n}"
+            },
+            "description": "Step 1: Send this request. Response contains a Google OAuth URL.\nStep 2: Copy the 'url' from response and open it in your browser.\nStep 3: Login with your whitelisted Google account.\nStep 4: After redirect, open browser DevTools > Application > Cookies.\nStep 5: Copy 'better-auth.session_token' value.\nStep 6: In Postman, go to Cookies (under Send button) > Add cookie for domain 'ledgerly-service.vercel.app' with name 'better-auth.session_token'.\nStep 7: Now all requests will be authenticated!"
           }
         },
         {
-          "name": "Google OAuth Login (open in browser)",
+          "name": "2. Verify Session (after login)",
           "request": {
             "method": "GET",
-            "url": {
-              "raw": "{{baseUrl}}/api/auth/sign-in/social?provider=google&callbackURL={{baseUrl}}/",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "auth", "sign-in", "social"],
-              "query": [
-                { "key": "provider", "value": "google" },
-                { "key": "callbackURL", "value": "{{baseUrl}}/" }
-              ]
-            },
-            "description": "Open this URL in a browser to login. After login, copy the 'better-auth.session_token' cookie and set it in Postman cookies."
+            "url": "{{baseUrl}}/api/auth/session",
+            "description": "After setting the cookie, this should return your user data with role (ADMIN/VIEWER)."
           }
         }
       ]
