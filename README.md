@@ -72,14 +72,15 @@ Swagger UI available at `/docs` when server is running.
 - **Local**: http://localhost:3000/docs
 - **Production**: https://ledgerly-service.vercel.app/docs
 
-### Endpoints Overview (33 endpoints)
+### Endpoints Overview (34 endpoints)
 
 | Module | Endpoints | Description |
 | ------ | --------- | ----------- |
 | Health | `GET /` | Health check |
 | Auth | `POST /api/auth/sign-in/social` | Google OAuth login |
-| Auth | `GET /api/auth/get-session` | Check current session |
+| Auth | `GET /api/auth/get-session` | Check current session (no role) |
 | Auth | `POST /api/auth/sign-out` | Logout |
+| Profile | `GET /api/me` | Current user profile with role |
 | Wallets | `POST GET /api/wallets` | List + create wallets |
 | Wallets | `GET PATCH DELETE /api/wallets/:id` | Wallet detail + update + delete |
 | Wallets | `POST /api/wallets/seed` | Seed 7 default wallets |

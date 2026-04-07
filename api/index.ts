@@ -34,7 +34,10 @@ async function bootstrap(): Promise<INestApplication> {
       limit: 20,
       standardHeaders: 'draft-8',
       legacyHeaders: false,
-      message: { statusCode: 429, message: 'Too many requests, try again later' },
+      message: {
+        statusCode: 429,
+        message: 'Too many requests, try again later',
+      },
     }),
   );
 
@@ -81,7 +84,10 @@ async function bootstrap(): Promise<INestApplication> {
 export default async function handler(req: Request, res: Response) {
   try {
     const nestApp = await bootstrap();
-    const instance = nestApp.getHttpAdapter().getInstance();
+    const instance = nestApp.getHttpAdapter().getInstance() as (
+      req: Request,
+      res: Response,
+    ) => void;
     instance(req, res);
   } catch (error) {
     console.error('Bootstrap error:', error);
