@@ -1,24 +1,7 @@
 import { PrismaClient } from '@prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
 import pg from 'pg';
-
-function requireEnv(key: string): string {
-  const value = process.env[key];
-  if (!value) {
-    throw new Error(`Missing required environment variable: ${key}`);
-  }
-  return value;
-}
-
-function getOrigins(): string[] {
-  const origins = [requireEnv('FRONTEND_URL'), requireEnv('BETTER_AUTH_URL')];
-  if (process.env.TRUSTED_ORIGINS) {
-    origins.push(
-      ...process.env.TRUSTED_ORIGINS.split(',').map((o) => o.trim()),
-    );
-  }
-  return origins;
-}
+import { getAllowedOrigins, requireEnv } from './env';
 
 let authInstance: Awaited<ReturnType<typeof createAuth>> | null = null;
 
@@ -36,7 +19,7 @@ async function createAuth() {
     }),
     secret: requireEnv('BETTER_AUTH_SECRET'),
     baseURL: requireEnv('BETTER_AUTH_URL'),
-    trustedOrigins: getOrigins(),
+    trustedOrigins: getAllowedOrigins(),
 
     socialProviders: {
       google: {

@@ -5,6 +5,7 @@ import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import { AppModule } from '../src/app.module';
 import { PrismaExceptionFilter } from '../src/prisma/prisma-exception.filter';
+import { getAllowedOrigins } from '../src/lib/env';
 import type { INestApplication } from '@nestjs/common';
 import type { Request, Response } from 'express';
 
@@ -37,15 +38,8 @@ async function bootstrap(): Promise<INestApplication> {
     }),
   );
 
-  const corsOrigins = [process.env.FRONTEND_URL ?? ''];
-  if (process.env.TRUSTED_ORIGINS) {
-    corsOrigins.push(
-      ...process.env.TRUSTED_ORIGINS.split(',').map((o) => o.trim()),
-    );
-  }
-
   app.enableCors({
-    origin: corsOrigins,
+    origin: getAllowedOrigins(),
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'Cookie'],

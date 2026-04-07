@@ -6,6 +6,7 @@ import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import { AppModule } from './app.module';
 import { PrismaExceptionFilter } from './prisma/prisma-exception.filter';
+import { getAllowedOrigins } from './lib/env';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
@@ -34,15 +35,8 @@ async function bootstrap() {
     }),
   );
 
-  const corsOrigins = [process.env.FRONTEND_URL ?? ''];
-  if (process.env.TRUSTED_ORIGINS) {
-    corsOrigins.push(
-      ...process.env.TRUSTED_ORIGINS.split(',').map((o) => o.trim()),
-    );
-  }
-
   app.enableCors({
-    origin: corsOrigins,
+    origin: getAllowedOrigins(),
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'Cookie'],

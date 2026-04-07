@@ -1,7 +1,7 @@
 {
   "info": {
     "name": "Ledgerly API",
-    "description": "Personal expense tracker API. Login via Google OAuth first, then use the session cookie for all requests.",
+    "description": "Personal expense tracker API.\n\n## How to Login\n1. Run '1. Get Google OAuth URL' request\n2. Copy the 'url' from response body\n3. Open that URL in your browser\n4. Login with your whitelisted Google account\n5. After redirect, open browser DevTools > Application > Cookies\n6. Copy 'better-auth.session_token' value\n7. In Postman: Cookies button > Add domain > paste cookie\n8. Run '2. Check Session' to verify\n9. All other requests are now authenticated!",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -26,6 +26,11 @@
       "type": "string"
     },
     {
+      "key": "incomeCategoryId",
+      "value": "",
+      "type": "string"
+    },
+    {
       "key": "transactionId",
       "value": "",
       "type": "string"
@@ -39,16 +44,12 @@
       "key": "budgetId",
       "value": "",
       "type": "string"
-    },
-    {
-      "key": "googleOAuthUrl",
-      "value": "",
-      "type": "string"
     }
   ],
   "item": [
     {
-      "name": "0. Health & Auth",
+      "name": "0. Auth",
+      "description": "Login flow: Get OAuth URL → Open in browser → Copy cookie → Verify session",
       "item": [
         {
           "name": "Health Check",
@@ -66,10 +67,12 @@
                 "exec": [
                   "const res = pm.response.json();",
                   "if (res.url) {",
-                  "  pm.collectionVariables.set('googleOAuthUrl', res.url);",
-                  "  console.log('=== OPEN THIS URL IN BROWSER ===');",
+                  "  console.log('\\n========================================');",
+                  "  console.log('OPEN THIS URL IN YOUR BROWSER:');",
                   "  console.log(res.url);",
-                  "  console.log('================================');",
+                  "  console.log('========================================\\n');",
+                  "  console.log('After login, copy cookie from browser DevTools > Application > Cookies > better-auth.session_token');",
+                  "  console.log('Then set it in Postman: Cookies button (under Send) > Add domain > paste cookie value');",
                   "}"
                 ]
               }
@@ -83,31 +86,65 @@
               "mode": "raw",
               "raw": "{\n  \"provider\": \"google\",\n  \"callbackURL\": \"{{baseUrl}}/\"\n}"
             },
-            "description": "Step 1: Send this request. Response contains a Google OAuth URL.\nStep 2: Copy the 'url' from response and open it in your browser.\nStep 3: Login with your whitelisted Google account.\nStep 4: After redirect, open browser DevTools > Application > Cookies.\nStep 5: Copy 'better-auth.session_token' value.\nStep 6: In Postman, go to Cookies (under Send button) > Add cookie for domain 'ledgerly-service.vercel.app' with name 'better-auth.session_token'.\nStep 7: Now all requests will be authenticated!"
+            "description": "Returns a Google OAuth URL. Open it in your browser to login.\n\nAfter Google redirects back, copy the session cookie from browser DevTools and set it in Postman."
           }
         },
         {
-          "name": "2. Verify Session (after login)",
+          "name": "2. Check Session",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res && res.user) {",
+                  "  console.log('Logged in as: ' + res.user.name + ' (' + res.user.email + ')');",
+                  "  console.log('Role: ' + (res.user.role || 'N/A'));",
+                  "  pm.test('Session is valid', () => pm.expect(res.user.id).to.be.a('string'));",
+                  "} else {",
+                  "  console.log('Not logged in. Set the session cookie first.');",
+                  "  pm.test('Session exists', () => pm.expect.fail('No session'));",
+                  "}"
+                ]
+              }
+            }
+          ],
           "request": {
             "method": "GET",
-            "url": "{{baseUrl}}/api/auth/session",
-            "description": "After setting the cookie, this should return your user data with role (ADMIN/VIEWER)."
+            "url": "{{baseUrl}}/api/auth/get-session",
+            "description": "Verify your session is valid. Should return user data after setting cookie."
+          }
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/auth/sign-out",
+            "description": "Sign out and clear session cookie."
           }
         }
       ]
     },
     {
-      "name": "1. Wallets",
+      "name": "1. Setup (run once)",
+      "description": "Seed default data. Run these first after login.",
       "item": [
         {
-          "name": "Seed Default Wallets",
+          "name": "Seed Default Wallets (7)",
           "request": {
             "method": "POST",
             "url": "{{baseUrl}}/api/wallets/seed"
           }
         },
         {
-          "name": "List Wallets",
+          "name": "Seed Default Categories (14)",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/categories/seed"
+          }
+        },
+        {
+          "name": "Load Wallets → save IDs",
           "event": [
             {
               "listen": "test",
@@ -116,12 +153,80 @@
                   "const res = pm.response.json();",
                   "if (res.length > 0) {",
                   "  pm.collectionVariables.set('walletId', res[0].id);",
-                  "  if (res.length > 1) pm.collectionVariables.set('walletId2', res[1].id);",
+                  "  console.log('walletId set to: ' + res[0].id + ' (' + res[0].name + ')');",
+                  "  if (res.length > 1) {",
+                  "    pm.collectionVariables.set('walletId2', res[1].id);",
+                  "    console.log('walletId2 set to: ' + res[1].id + ' (' + res[1].name + ')');",
+                  "  }",
                   "}"
                 ]
               }
             }
           ],
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/wallets"
+          }
+        },
+        {
+          "name": "Load Expense Categories → save ID",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.length > 0) {",
+                  "  pm.collectionVariables.set('categoryId', res[0].id);",
+                  "  console.log('categoryId (expense) set to: ' + res[0].id + ' (' + res[0].name + ')');",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/categories?type=EXPENSE",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "categories"],
+              "query": [{ "key": "type", "value": "EXPENSE" }]
+            }
+          }
+        },
+        {
+          "name": "Load Income Categories → save ID",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.length > 0) {",
+                  "  pm.collectionVariables.set('incomeCategoryId', res[0].id);",
+                  "  console.log('incomeCategoryId set to: ' + res[0].id + ' (' + res[0].name + ')');",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/categories?type=INCOME",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "categories"],
+              "query": [{ "key": "type", "value": "INCOME" }]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Wallets",
+      "item": [
+        {
+          "name": "List Wallets",
           "request": {
             "method": "GET",
             "url": "{{baseUrl}}/api/wallets"
@@ -146,7 +251,7 @@
             "header": [{ "key": "Content-Type", "value": "application/json" }],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"Bank BCA\",\n  \"initialBalance\": 5000000\n}"
+              "raw": "{\n  \"name\": \"Dana\",\n  \"initialBalance\": 200000\n}"
             }
           }
         },
@@ -165,7 +270,7 @@
             "header": [{ "key": "Content-Type", "value": "application/json" }],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"Bank BCA Updated\",\n  \"initialBalance\": 10000000\n}"
+              "raw": "{\n  \"name\": \"Dana Updated\",\n  \"initialBalance\": 500000\n}"
             }
           }
         },
@@ -179,35 +284,17 @@
       ]
     },
     {
-      "name": "2. Categories",
+      "name": "3. Categories",
       "item": [
         {
-          "name": "Seed Default Categories",
-          "request": {
-            "method": "POST",
-            "url": "{{baseUrl}}/api/categories/seed"
-          }
-        },
-        {
-          "name": "List Categories",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "const res = pm.response.json();",
-                  "if (res.length > 0) pm.collectionVariables.set('categoryId', res[0].id);"
-                ]
-              }
-            }
-          ],
+          "name": "List All Categories",
           "request": {
             "method": "GET",
             "url": "{{baseUrl}}/api/categories"
           }
         },
         {
-          "name": "List Categories (Expense Only)",
+          "name": "List Expense Categories",
           "request": {
             "method": "GET",
             "url": {
@@ -215,6 +302,18 @@
               "host": ["{{baseUrl}}"],
               "path": ["api", "categories"],
               "query": [{ "key": "type", "value": "EXPENSE" }]
+            }
+          }
+        },
+        {
+          "name": "List Income Categories",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/categories?type=INCOME",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "categories"],
+              "query": [{ "key": "type", "value": "INCOME" }]
             }
           }
         },
@@ -242,6 +341,13 @@
           }
         },
         {
+          "name": "Get Category",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/categories/{{categoryId}}"
+          }
+        },
+        {
           "name": "Update Category",
           "request": {
             "method": "PATCH",
@@ -263,7 +369,7 @@
       ]
     },
     {
-      "name": "3. Transactions",
+      "name": "4. Transactions",
       "item": [
         {
           "name": "Create Expense",
@@ -290,13 +396,24 @@
         },
         {
           "name": "Create Income",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.id) pm.collectionVariables.set('transactionId', res.id);"
+                ]
+              }
+            }
+          ],
           "request": {
             "method": "POST",
             "url": "{{baseUrl}}/api/transactions",
             "header": [{ "key": "Content-Type", "value": "application/json" }],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"amount\": 8500000,\n  \"type\": \"INCOME\",\n  \"walletId\": \"{{walletId}}\",\n  \"categoryId\": \"{{categoryId}}\",\n  \"note\": \"Gaji Januari\"\n}"
+              "raw": "{\n  \"amount\": 8500000,\n  \"type\": \"INCOME\",\n  \"walletId\": \"{{walletId}}\",\n  \"categoryId\": \"{{incomeCategoryId}}\",\n  \"note\": \"Gaji Januari\"\n}"
             }
           }
         },
@@ -325,6 +442,7 @@
                 { "key": "limit", "value": "20" },
                 { "key": "type", "value": "EXPENSE", "disabled": true },
                 { "key": "walletId", "value": "{{walletId}}", "disabled": true },
+                { "key": "categoryId", "value": "{{categoryId}}", "disabled": true },
                 { "key": "startDate", "value": "2024-01-01", "disabled": true },
                 { "key": "endDate", "value": "2024-12-31", "disabled": true }
               ]
@@ -360,7 +478,7 @@
       ]
     },
     {
-      "name": "4. Recurring",
+      "name": "5. Recurring",
       "item": [
         {
           "name": "Create Recurring",
@@ -400,6 +518,13 @@
           }
         },
         {
+          "name": "Get Recurring",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/recurrings/{{recurringId}}"
+          }
+        },
+        {
           "name": "Update Recurring",
           "request": {
             "method": "PATCH",
@@ -421,7 +546,7 @@
       ]
     },
     {
-      "name": "5. Budgets",
+      "name": "6. Budgets",
       "item": [
         {
           "name": "Create Budget",
@@ -482,7 +607,7 @@
       ]
     },
     {
-      "name": "6. Reports",
+      "name": "7. Reports",
       "item": [
         {
           "name": "Dashboard",
@@ -495,21 +620,42 @@
           "name": "Weekly Report",
           "request": {
             "method": "GET",
-            "url": "{{baseUrl}}/api/reports/weekly"
+            "url": {
+              "raw": "{{baseUrl}}/api/reports/weekly",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "reports", "weekly"],
+              "query": [
+                { "key": "date", "value": "2024-01-15", "disabled": true }
+              ]
+            }
           }
         },
         {
           "name": "Monthly Report",
           "request": {
             "method": "GET",
-            "url": "{{baseUrl}}/api/reports/monthly"
+            "url": {
+              "raw": "{{baseUrl}}/api/reports/monthly",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "reports", "monthly"],
+              "query": [
+                { "key": "date", "value": "2024-01-15", "disabled": true }
+              ]
+            }
           }
         },
         {
           "name": "Yearly Report",
           "request": {
             "method": "GET",
-            "url": "{{baseUrl}}/api/reports/yearly"
+            "url": {
+              "raw": "{{baseUrl}}/api/reports/yearly",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "reports", "yearly"],
+              "query": [
+                { "key": "date", "value": "2024-01-15", "disabled": true }
+              ]
+            }
           }
         }
       ]
