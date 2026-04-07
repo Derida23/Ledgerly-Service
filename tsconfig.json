@@ -22,6 +22,6 @@
     "forceConsistentCasingInFileNames": true,
     "types": ["node", "jest"]
   },
-  "include": ["src/**/*", "api/**/*"],
-  "exclude": ["node_modules", "dist", "generated", "**/*.spec.ts"]
+  "include": ["src/**/*", "api/**/*", "test/**/*"],
+  "exclude": ["node_modules", "dist", "generated"]
 }

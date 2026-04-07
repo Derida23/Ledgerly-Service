@@ -1,11 +1,31 @@
 import { PrismaService } from '../prisma/prisma.service';
 
-interface MockModel {
+interface WalletMock {
+  create: jest.Mock;
+  createMany: jest.Mock;
+  findMany: jest.Mock;
+  findUnique: jest.Mock;
+  update: jest.Mock;
+  delete: jest.Mock;
+  count: jest.Mock;
+}
+
+interface CategoryMock {
   create: jest.Mock;
   createMany: jest.Mock;
   findMany: jest.Mock;
   findUnique: jest.Mock;
   findFirst: jest.Mock;
+  update: jest.Mock;
+  delete: jest.Mock;
+  count: jest.Mock;
+}
+
+interface TransactionMock {
+  create: jest.Mock;
+  createMany: jest.Mock;
+  findMany: jest.Mock;
+  findUnique: jest.Mock;
   update: jest.Mock;
   delete: jest.Mock;
   deleteMany: jest.Mock;
@@ -14,15 +34,34 @@ interface MockModel {
   groupBy: jest.Mock;
 }
 
-type PartialMockModel = Partial<MockModel> & Record<string, jest.Mock>;
+interface RecurringMock {
+  create: jest.Mock;
+  findMany: jest.Mock;
+  findUnique: jest.Mock;
+  update: jest.Mock;
+  delete: jest.Mock;
+}
 
-interface MockDb {
-  wallet: PartialMockModel;
-  category: PartialMockModel;
-  transaction: PartialMockModel;
-  recurring: PartialMockModel;
-  budget: PartialMockModel;
-  budgetCategory: PartialMockModel;
+interface BudgetMock {
+  create: jest.Mock;
+  findMany: jest.Mock;
+  findUnique: jest.Mock;
+  update: jest.Mock;
+  delete: jest.Mock;
+}
+
+interface BudgetCategoryMock {
+  createMany: jest.Mock;
+  deleteMany: jest.Mock;
+}
+
+export interface MockDb {
+  wallet: WalletMock;
+  category: CategoryMock;
+  transaction: TransactionMock;
+  recurring: RecurringMock;
+  budget: BudgetMock;
+  budgetCategory: BudgetCategoryMock;
   $transaction: jest.Mock;
 }
 
