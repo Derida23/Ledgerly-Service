@@ -34,8 +34,15 @@ async function bootstrap() {
     }),
   );
 
+  const corsOrigins = [process.env.FRONTEND_URL ?? ''];
+  if (process.env.TRUSTED_ORIGINS) {
+    corsOrigins.push(
+      ...process.env.TRUSTED_ORIGINS.split(',').map((o) => o.trim()),
+    );
+  }
+
   app.enableCors({
-    origin: process.env.FRONTEND_URL,
+    origin: corsOrigins,
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'Cookie'],
