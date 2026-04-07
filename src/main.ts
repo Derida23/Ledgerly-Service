@@ -2,6 +2,8 @@ import 'dotenv/config';
 import { NestFactory } from '@nestjs/core';
 import { Logger, ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import helmet from 'helmet';
+import rateLimit from 'express-rate-limit';
 import { AppModule } from './app.module';
 import { PrismaExceptionFilter } from './prisma/prisma-exception.filter';
 
@@ -9,6 +11,28 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
     bodyParser: false,
   });
+
+  // Security headers
+  app.use(
+    helmet({
+      contentSecurityPolicy: false, // disabled for Swagger UI CDN
+    }),
+  );
+
+  // Rate limiting on auth routes (max 20 requests per 15 minutes)
+  app.use(
+    '/api/auth',
+    rateLimit({
+      windowMs: 15 * 60 * 1000,
+      limit: 20,
+      standardHeaders: 'draft-8',
+      legacyHeaders: false,
+      message: {
+        statusCode: 429,
+        message: 'Too many requests, try again later',
+      },
+    }),
+  );
 
   app.enableCors({
     origin: process.env.FRONTEND_URL,

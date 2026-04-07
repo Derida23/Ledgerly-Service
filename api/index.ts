@@ -1,6 +1,8 @@
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import helmet from 'helmet';
+import rateLimit from 'express-rate-limit';
 import { AppModule } from '../src/app.module';
 import { PrismaExceptionFilter } from '../src/prisma/prisma-exception.filter';
 import type { INestApplication } from '@nestjs/common';
@@ -15,6 +17,25 @@ async function bootstrap(): Promise<INestApplication> {
     bodyParser: false,
     logger: ['error', 'warn', 'log'],
   });
+
+  // Security headers
+  app.use(
+    helmet({
+      contentSecurityPolicy: false,
+    }),
+  );
+
+  // Rate limiting on auth routes
+  app.use(
+    '/api/auth',
+    rateLimit({
+      windowMs: 15 * 60 * 1000,
+      limit: 20,
+      standardHeaders: 'draft-8',
+      legacyHeaders: false,
+      message: { statusCode: 429, message: 'Too many requests, try again later' },
+    }),
+  );
 
   app.enableCors({
     origin: process.env.FRONTEND_URL,
@@ -42,7 +63,8 @@ async function bootstrap(): Promise<INestApplication> {
 
   const document = SwaggerModule.createDocument(app, swaggerConfig);
   SwaggerModule.setup('docs', app, document, {
-    customCssUrl: 'https://cdn.jsdelivr.net/npm/swagger-ui-dist@5/swagger-ui.css',
+    customCssUrl:
+      'https://cdn.jsdelivr.net/npm/swagger-ui-dist@5/swagger-ui.css',
     customJs: [
       'https://cdn.jsdelivr.net/npm/swagger-ui-dist@5/swagger-ui-bundle.js',
       'https://cdn.jsdelivr.net/npm/swagger-ui-dist@5/swagger-ui-standalone-preset.js',
@@ -63,7 +85,7 @@ export default async function handler(req: Request, res: Response) {
     console.error('Bootstrap error:', error);
     res.status(500).json({
       statusCode: 500,
-      message: 'Internal server error during bootstrap',
+      message: 'Internal server error',
     });
   }
 }

@@ -9,10 +9,7 @@ import { Public } from './decorators/public.decorator';
 export class AuthController {
   @Public()
   @All('*path')
-  async handleAuth(
-    @Req() req: Request,
-    @Res() res: Response,
-  ): Promise<void> {
+  async handleAuth(@Req() req: Request, @Res() res: Response): Promise<void> {
     const auth = await getAuth();
     const { toNodeHandler } = await import('better-auth/node');
     const handler = toNodeHandler(auth);
