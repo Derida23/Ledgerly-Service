@@ -26,7 +26,7 @@ async function createAuth() {
     }),
     secret: requireEnv('BETTER_AUTH_SECRET'),
     baseURL: requireEnv('BETTER_AUTH_URL'),
-    trustedOrigins: [requireEnv('FRONTEND_URL')],
+    trustedOrigins: [requireEnv('FRONTEND_URL'), requireEnv('BETTER_AUTH_URL')],
 
     socialProviders: {
       google: {
