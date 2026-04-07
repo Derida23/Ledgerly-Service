@@ -1,0 +1,499 @@
+{
+  "info": {
+    "name": "Ledgerly API",
+    "description": "Personal expense tracker API. Login via Google OAuth first, then use the session cookie for all requests.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "https://ledgerly-service.vercel.app",
+      "type": "string"
+    },
+    {
+      "key": "walletId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "walletId2",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "categoryId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "transactionId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "recurringId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "budgetId",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "0. Health & Auth",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/"
+          }
+        },
+        {
+          "name": "Get Session",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/auth/session"
+          }
+        },
+        {
+          "name": "Google OAuth Login (open in browser)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/sign-in/social?provider=google&callbackURL={{baseUrl}}/",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "sign-in", "social"],
+              "query": [
+                { "key": "provider", "value": "google" },
+                { "key": "callbackURL", "value": "{{baseUrl}}/" }
+              ]
+            },
+            "description": "Open this URL in a browser to login. After login, copy the 'better-auth.session_token' cookie and set it in Postman cookies."
+          }
+        }
+      ]
+    },
+    {
+      "name": "1. Wallets",
+      "item": [
+        {
+          "name": "Seed Default Wallets",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/wallets/seed"
+          }
+        },
+        {
+          "name": "List Wallets",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.length > 0) {",
+                  "  pm.collectionVariables.set('walletId', res[0].id);",
+                  "  if (res.length > 1) pm.collectionVariables.set('walletId2', res[1].id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/wallets"
+          }
+        },
+        {
+          "name": "Create Wallet",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.id) pm.collectionVariables.set('walletId', res.id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/wallets",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Bank BCA\",\n  \"initialBalance\": 5000000\n}"
+            }
+          }
+        },
+        {
+          "name": "Get Wallet",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/wallets/{{walletId}}"
+          }
+        },
+        {
+          "name": "Update Wallet",
+          "request": {
+            "method": "PATCH",
+            "url": "{{baseUrl}}/api/wallets/{{walletId}}",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Bank BCA Updated\",\n  \"initialBalance\": 10000000\n}"
+            }
+          }
+        },
+        {
+          "name": "Delete Wallet",
+          "request": {
+            "method": "DELETE",
+            "url": "{{baseUrl}}/api/wallets/{{walletId}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Categories",
+      "item": [
+        {
+          "name": "Seed Default Categories",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/categories/seed"
+          }
+        },
+        {
+          "name": "List Categories",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.length > 0) pm.collectionVariables.set('categoryId', res[0].id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/categories"
+          }
+        },
+        {
+          "name": "List Categories (Expense Only)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/categories?type=EXPENSE",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "categories"],
+              "query": [{ "key": "type", "value": "EXPENSE" }]
+            }
+          }
+        },
+        {
+          "name": "Create Category",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.id) pm.collectionVariables.set('categoryId', res.id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/categories",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Investasi\",\n  \"icon\": \"📈\",\n  \"type\": \"EXPENSE\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Update Category",
+          "request": {
+            "method": "PATCH",
+            "url": "{{baseUrl}}/api/categories/{{categoryId}}",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Investasi Updated\",\n  \"icon\": \"💹\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Delete Category",
+          "request": {
+            "method": "DELETE",
+            "url": "{{baseUrl}}/api/categories/{{categoryId}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. Transactions",
+      "item": [
+        {
+          "name": "Create Expense",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.id) pm.collectionVariables.set('transactionId', res.id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/transactions",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": 50000,\n  \"type\": \"EXPENSE\",\n  \"walletId\": \"{{walletId}}\",\n  \"categoryId\": \"{{categoryId}}\",\n  \"method\": \"QRIS\",\n  \"note\": \"Makan siang\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Create Income",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/transactions",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": 8500000,\n  \"type\": \"INCOME\",\n  \"walletId\": \"{{walletId}}\",\n  \"categoryId\": \"{{categoryId}}\",\n  \"note\": \"Gaji Januari\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Create Transfer",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/transactions/transfer",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": 1000000,\n  \"sourceWalletId\": \"{{walletId}}\",\n  \"targetWalletId\": \"{{walletId2}}\",\n  \"adminFee\": 6500,\n  \"note\": \"Transfer ke Jago\"\n}"
+            }
+          }
+        },
+        {
+          "name": "List Transactions",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/transactions?page=1&limit=20",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "transactions"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "20" },
+                { "key": "type", "value": "EXPENSE", "disabled": true },
+                { "key": "walletId", "value": "{{walletId}}", "disabled": true },
+                { "key": "startDate", "value": "2024-01-01", "disabled": true },
+                { "key": "endDate", "value": "2024-12-31", "disabled": true }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Transaction",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/transactions/{{transactionId}}"
+          }
+        },
+        {
+          "name": "Update Transaction",
+          "request": {
+            "method": "PATCH",
+            "url": "{{baseUrl}}/api/transactions/{{transactionId}}",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": 75000,\n  \"note\": \"Makan siang + kopi\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Delete Transaction",
+          "request": {
+            "method": "DELETE",
+            "url": "{{baseUrl}}/api/transactions/{{transactionId}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. Recurring",
+      "item": [
+        {
+          "name": "Create Recurring",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.id) pm.collectionVariables.set('recurringId', res.id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/recurrings",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Listrik\",\n  \"type\": \"EXPENSE\",\n  \"amount\": 500000,\n  \"dayOfMonth\": 5,\n  \"walletId\": \"{{walletId}}\",\n  \"categoryId\": \"{{categoryId}}\"\n}"
+            }
+          }
+        },
+        {
+          "name": "List Recurring",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/recurrings"
+          }
+        },
+        {
+          "name": "Due Today",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/recurrings/due-today"
+          }
+        },
+        {
+          "name": "Update Recurring",
+          "request": {
+            "method": "PATCH",
+            "url": "{{baseUrl}}/api/recurrings/{{recurringId}}",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": 550000\n}"
+            }
+          }
+        },
+        {
+          "name": "Delete Recurring",
+          "request": {
+            "method": "DELETE",
+            "url": "{{baseUrl}}/api/recurrings/{{recurringId}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "5. Budgets",
+      "item": [
+        {
+          "name": "Create Budget",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.id) pm.collectionVariables.set('budgetId', res.id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/budgets",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Budget Bulanan\",\n  \"limit\": 1000000,\n  \"categoryIds\": [\"{{categoryId}}\"]\n}"
+            }
+          }
+        },
+        {
+          "name": "List Budgets",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/budgets"
+          }
+        },
+        {
+          "name": "Get Budget",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/budgets/{{budgetId}}"
+          }
+        },
+        {
+          "name": "Update Budget",
+          "request": {
+            "method": "PATCH",
+            "url": "{{baseUrl}}/api/budgets/{{budgetId}}",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"limit\": 1500000\n}"
+            }
+          }
+        },
+        {
+          "name": "Delete Budget",
+          "request": {
+            "method": "DELETE",
+            "url": "{{baseUrl}}/api/budgets/{{budgetId}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "6. Reports",
+      "item": [
+        {
+          "name": "Dashboard",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/reports/dashboard"
+          }
+        },
+        {
+          "name": "Weekly Report",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/reports/weekly"
+          }
+        },
+        {
+          "name": "Monthly Report",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/reports/monthly"
+          }
+        },
+        {
+          "name": "Yearly Report",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/reports/yearly"
+          }
+        }
+      ]
+    }
+  ]
+}
