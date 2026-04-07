@@ -7,6 +7,7 @@ import {
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { getAuth } from '../../lib/auth';
+import { PrismaService } from '../../prisma/prisma.service';
 import { IS_PUBLIC_KEY } from '../decorators/public.decorator';
 import { type AuthenticatedRequest } from '../types/auth.types';
 
@@ -14,7 +15,10 @@ import { type AuthenticatedRequest } from '../types/auth.types';
 export class SessionGuard implements CanActivate {
   private readonly logger = new Logger(SessionGuard.name);
 
-  constructor(private readonly reflector: Reflector) {}
+  constructor(
+    private readonly reflector: Reflector,
+    private readonly prisma: PrismaService,
+  ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
@@ -47,14 +51,22 @@ export class SessionGuard implements CanActivate {
       throw new UnauthorizedException();
     }
 
-    if (!('role' in session.user)) {
-      this.logger.error('Session user missing role field');
-      throw new UnauthorizedException('Invalid session data');
+    // Better Auth doesn't return custom fields (role) in session
+    // Fetch role from database
+    const dbUser = await this.prisma.db.user.findUnique({
+      where: { id: session.user.id as string },
+      select: { role: true },
+    });
+
+    if (!dbUser) {
+      throw new UnauthorizedException('User not found');
     }
 
     const authenticatedReq = request as AuthenticatedRequest;
-    authenticatedReq.user =
-      session.user as unknown as AuthenticatedRequest['user'];
+    authenticatedReq.user = {
+      ...(session.user as unknown as AuthenticatedRequest['user']),
+      role: dbUser.role,
+    };
     authenticatedReq.session =
       session.session as unknown as AuthenticatedRequest['session'];
 
