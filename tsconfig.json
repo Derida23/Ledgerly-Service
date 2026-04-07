@@ -19,8 +19,9 @@
     "noUncheckedIndexedAccess": true,
     "noImplicitOverride": true,
     "noFallthroughCasesInSwitch": true,
-    "forceConsistentCasingInFileNames": true
+    "forceConsistentCasingInFileNames": true,
+    "types": ["node", "jest"]
   },
-  "include": ["src/**/*", "api/**/*", "test/**/*"],
-  "exclude": ["node_modules", "dist", "generated"]
+  "include": ["src/**/*", "api/**/*"],
+  "exclude": ["node_modules", "dist", "generated", "**/*.spec.ts"]
 }

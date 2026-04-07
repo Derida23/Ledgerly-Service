@@ -1,13 +1,33 @@
 import { PrismaService } from '../prisma/prisma.service';
 
-type MockDb = {
-  [K in keyof PrismaService['db']]: K extends `$${string}`
-    ? jest.Mock
-    : Record<string, jest.Mock>;
-};
+interface MockModel {
+  create: jest.Mock;
+  createMany: jest.Mock;
+  findMany: jest.Mock;
+  findUnique: jest.Mock;
+  findFirst: jest.Mock;
+  update: jest.Mock;
+  delete: jest.Mock;
+  deleteMany: jest.Mock;
+  count: jest.Mock;
+  aggregate: jest.Mock;
+  groupBy: jest.Mock;
+}
+
+type PartialMockModel = Partial<MockModel> & Record<string, jest.Mock>;
+
+interface MockDb {
+  wallet: PartialMockModel;
+  category: PartialMockModel;
+  transaction: PartialMockModel;
+  recurring: PartialMockModel;
+  budget: PartialMockModel;
+  budgetCategory: PartialMockModel;
+  $transaction: jest.Mock;
+}
 
 export function createMockPrismaService() {
-  const mockDb: Partial<MockDb> = {
+  const mockDb: MockDb = {
     wallet: {
       create: jest.fn(),
       createMany: jest.fn(),
@@ -66,6 +86,6 @@ export function createMockPrismaService() {
   };
 }
 
-export function getMockDb(prismaService: PrismaService) {
+export function getMockDb(prismaService: PrismaService): MockDb {
   return prismaService.db as unknown as MockDb;
 }
