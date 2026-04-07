@@ -10,6 +10,16 @@ function requireEnv(key: string): string {
   return value;
 }
 
+function getOrigins(): string[] {
+  const origins = [requireEnv('FRONTEND_URL'), requireEnv('BETTER_AUTH_URL')];
+  if (process.env.TRUSTED_ORIGINS) {
+    origins.push(
+      ...process.env.TRUSTED_ORIGINS.split(',').map((o) => o.trim()),
+    );
+  }
+  return origins;
+}
+
 let authInstance: Awaited<ReturnType<typeof createAuth>> | null = null;
 
 async function createAuth() {
@@ -26,7 +36,7 @@ async function createAuth() {
     }),
     secret: requireEnv('BETTER_AUTH_SECRET'),
     baseURL: requireEnv('BETTER_AUTH_URL'),
-    trustedOrigins: [requireEnv('FRONTEND_URL'), requireEnv('BETTER_AUTH_URL')],
+    trustedOrigins: getOrigins(),
 
     socialProviders: {
       google: {
