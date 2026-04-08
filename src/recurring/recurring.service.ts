@@ -3,7 +3,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { RecurringType } from '@prisma/client';
+import { CategoryType, RecurringType } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateRecurringDto } from './dto/create-recurring.dto';
 import { UpdateRecurringDto } from './dto/update-recurring.dto';
@@ -101,5 +101,103 @@ export class RecurringService {
       where: { userId, dayOfMonth: today },
       select: RECURRING_SELECT,
     });
+  }
+
+  async seedDefaults(userId: string) {
+    const existing = await this.prisma.db.recurring.count({
+      where: { userId },
+    });
+    if (existing > 0) return;
+
+    const wallets = await this.prisma.db.wallet.findMany({
+      where: { userId },
+      select: { id: true, name: true },
+    });
+    const categories = await this.prisma.db.category.findMany({
+      where: { userId, type: CategoryType.EXPENSE },
+      select: { id: true, name: true },
+    });
+
+    const walletMap = new Map(wallets.map((w) => [w.name, w.id]));
+    const categoryMap = new Map(categories.map((c) => [c.name, c.id]));
+
+    const defaults = [
+      {
+        name: 'Bibit',
+        type: RecurringType.TRANSFER,
+        amount: 500000,
+        dayOfMonth: 1,
+        walletName: 'Bank Jago',
+        targetWalletName: 'Bibit',
+        categoryName: null,
+      },
+      {
+        name: 'Transfer istri',
+        type: RecurringType.EXPENSE,
+        amount: 1000000,
+        dayOfMonth: 1,
+        walletName: 'Bank Jago Syariah',
+        targetWalletName: null,
+        categoryName: 'Keluarga',
+      },
+      {
+        name: 'Listrik',
+        type: RecurringType.EXPENSE,
+        amount: 500000,
+        dayOfMonth: 5,
+        walletName: 'Bank Mandiri',
+        targetWalletName: null,
+        categoryName: 'Tagihan & Utilitas',
+      },
+      {
+        name: 'WiFi',
+        type: RecurringType.EXPENSE,
+        amount: 300000,
+        dayOfMonth: 5,
+        walletName: 'Bank Mandiri',
+        targetWalletName: null,
+        categoryName: 'Tagihan & Utilitas',
+      },
+      {
+        name: 'Admin Mandiri',
+        type: RecurringType.EXPENSE,
+        amount: 10000,
+        dayOfMonth: 1,
+        walletName: 'Bank Mandiri',
+        targetWalletName: null,
+        categoryName: 'Biaya Admin',
+      },
+      {
+        name: 'Admin BCA',
+        type: RecurringType.EXPENSE,
+        amount: 15000,
+        dayOfMonth: 1,
+        walletName: 'Bank BCA',
+        targetWalletName: null,
+        categoryName: 'Biaya Admin',
+      },
+    ];
+
+    for (const r of defaults) {
+      const walletId = walletMap.get(r.walletName);
+      if (!walletId) continue;
+
+      await this.prisma.db.recurring.create({
+        data: {
+          name: r.name,
+          type: r.type,
+          amount: r.amount,
+          dayOfMonth: r.dayOfMonth,
+          walletId,
+          targetWalletId: r.targetWalletName
+            ? (walletMap.get(r.targetWalletName) ?? null)
+            : null,
+          categoryId: r.categoryName
+            ? (categoryMap.get(r.categoryName) ?? null)
+            : null,
+          userId,
+        },
+      });
+    }
   }
 }

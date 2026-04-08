@@ -102,4 +102,19 @@ export class RecurringController {
   remove(@Param('id') id: string, @CurrentUser() user: { id: string }) {
     return this.recurringService.remove(id, user.id);
   }
+
+  @Post('seed')
+  @Roles('ADMIN')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Seed 6 default recurring reminders (skip jika sudah ada)',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Default recurring berhasil di-seed',
+  })
+  async seed(@CurrentUser() user: { id: string }) {
+    await this.recurringService.seedDefaults(user.id);
+    return { message: 'Default recurring berhasil di-seed' };
+  }
 }

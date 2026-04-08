@@ -72,7 +72,7 @@ Swagger UI available at `/docs` when server is running.
 - **Local**: http://localhost:3000/docs
 - **Production**: https://ledgerly-service.vercel.app/docs
 
-### Endpoints Overview (34 endpoints)
+### Endpoints Overview (37 endpoints)
 
 | Module | Endpoints | Description |
 | ------ | --------- | ----------- |
@@ -93,8 +93,10 @@ Swagger UI available at `/docs` when server is running.
 | Recurring | `POST GET /api/recurrings` | List + create recurring reminders |
 | Recurring | `GET /api/recurrings/due-today` | Reminders due today |
 | Recurring | `GET PATCH DELETE /api/recurrings/:id` | Recurring detail + update + delete |
+| Recurring | `POST /api/recurrings/seed` | Seed 6 default recurring reminders |
 | Budgets | `POST GET /api/budgets` | List + create budgets |
 | Budgets | `GET PATCH DELETE /api/budgets/:id` | Budget detail + update + delete |
+| Budgets | `POST /api/budgets/seed` | Seed default budget (Makanan+Transport, 1jt) |
 | Reports | `GET /api/reports/dashboard` | Total balance + 12-month trend |
 | Reports | `GET /api/reports/weekly` | Weekly report |
 | Reports | `GET /api/reports/monthly` | Monthly report + comparison |

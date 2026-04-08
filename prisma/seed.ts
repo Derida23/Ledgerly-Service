@@ -1,5 +1,5 @@
 import 'dotenv/config';
-import { PrismaClient, CategoryType } from '@prisma/client';
+import { PrismaClient, CategoryType, RecurringType } from '@prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
 import pg from 'pg';
 
@@ -37,34 +37,43 @@ const DEFAULT_WALLETS = [
   { name: 'Bibit', initialBalance: 0 },
 ];
 
-async function seedCategories(userId: string, email: string) {
+// Recurring reminders dari CLAUDE.md
+const DEFAULT_RECURRINGS = [
+  { name: 'Bibit', type: RecurringType.TRANSFER, amount: 500000, dayOfMonth: 1, walletName: 'Bank Jago', targetWalletName: 'Bibit', categoryName: null },
+  { name: 'Transfer istri', type: RecurringType.EXPENSE, amount: 1000000, dayOfMonth: 1, walletName: 'Bank Jago Syariah', targetWalletName: null, categoryName: 'Keluarga' },
+  { name: 'Listrik', type: RecurringType.EXPENSE, amount: 500000, dayOfMonth: 5, walletName: 'Bank Mandiri', targetWalletName: null, categoryName: 'Tagihan & Utilitas' },
+  { name: 'WiFi', type: RecurringType.EXPENSE, amount: 300000, dayOfMonth: 5, walletName: 'Bank Mandiri', targetWalletName: null, categoryName: 'Tagihan & Utilitas' },
+  { name: 'Admin Mandiri', type: RecurringType.EXPENSE, amount: 10000, dayOfMonth: 1, walletName: 'Bank Mandiri', targetWalletName: null, categoryName: 'Biaya Admin' },
+  { name: 'Admin BCA', type: RecurringType.EXPENSE, amount: 15000, dayOfMonth: 1, walletName: 'Bank BCA', targetWalletName: null, categoryName: 'Biaya Admin' },
+];
+
+// Budget dari CLAUDE.md — Makanan + Transportasi, 1jt/bulan
+const DEFAULT_BUDGET = {
+  name: 'Budget Bulanan',
+  limit: 1000000,
+  categoryNames: ['Makanan & Minuman', 'Transportasi'],
+};
+
+async function seedCategories(userId: string) {
   const existing = await prisma.category.count({ where: { userId } });
   if (existing > 0) {
-    console.log(`  Categories: already exist — skipping`);
+    console.log('  Categories: already exist — skipping');
     return;
   }
 
   const data = [
-    ...DEFAULT_EXPENSE_CATEGORIES.map((c) => ({
-      ...c,
-      type: CategoryType.EXPENSE,
-      userId,
-    })),
-    ...DEFAULT_INCOME_CATEGORIES.map((c) => ({
-      ...c,
-      type: CategoryType.INCOME,
-      userId,
-    })),
+    ...DEFAULT_EXPENSE_CATEGORIES.map((c) => ({ ...c, type: CategoryType.EXPENSE, userId })),
+    ...DEFAULT_INCOME_CATEGORIES.map((c) => ({ ...c, type: CategoryType.INCOME, userId })),
   ];
 
   await prisma.category.createMany({ data, skipDuplicates: true });
   console.log(`  Categories: seeded ${data.length} categories`);
 }
 
-async function seedWallets(userId: string, email: string) {
+async function seedWallets(userId: string) {
   const existing = await prisma.wallet.count({ where: { userId } });
   if (existing > 0) {
-    console.log(`  Wallets: already exist — skipping`);
+    console.log('  Wallets: already exist — skipping');
     return;
   }
 
@@ -73,6 +82,86 @@ async function seedWallets(userId: string, email: string) {
     skipDuplicates: true,
   });
   console.log(`  Wallets: seeded ${DEFAULT_WALLETS.length} wallets`);
+}
+
+async function seedRecurrings(userId: string) {
+  const existing = await prisma.recurring.count({ where: { userId } });
+  if (existing > 0) {
+    console.log('  Recurrings: already exist — skipping');
+    return;
+  }
+
+  const wallets = await prisma.wallet.findMany({
+    where: { userId },
+    select: { id: true, name: true },
+  });
+  const categories = await prisma.category.findMany({
+    where: { userId, type: CategoryType.EXPENSE },
+    select: { id: true, name: true },
+  });
+
+  const walletMap = new Map(wallets.map((w) => [w.name, w.id]));
+  const categoryMap = new Map(categories.map((c) => [c.name, c.id]));
+
+  let seeded = 0;
+  for (const r of DEFAULT_RECURRINGS) {
+    const walletId = walletMap.get(r.walletName);
+    if (!walletId) continue;
+
+    const targetWalletId = r.targetWalletName ? walletMap.get(r.targetWalletName) ?? null : null;
+    const categoryId = r.categoryName ? categoryMap.get(r.categoryName) ?? null : null;
+
+    await prisma.recurring.create({
+      data: {
+        name: r.name,
+        type: r.type,
+        amount: r.amount,
+        dayOfMonth: r.dayOfMonth,
+        walletId,
+        targetWalletId,
+        categoryId,
+        userId,
+      },
+    });
+    seeded++;
+  }
+
+  console.log(`  Recurrings: seeded ${seeded} reminders`);
+}
+
+async function seedBudget(userId: string) {
+  const existing = await prisma.budget.count({ where: { userId } });
+  if (existing > 0) {
+    console.log('  Budget: already exist — skipping');
+    return;
+  }
+
+  const categories = await prisma.category.findMany({
+    where: {
+      userId,
+      type: CategoryType.EXPENSE,
+      name: { in: DEFAULT_BUDGET.categoryNames },
+    },
+    select: { id: true, name: true },
+  });
+
+  if (categories.length === 0) {
+    console.log('  Budget: no matching categories found — skipping');
+    return;
+  }
+
+  await prisma.budget.create({
+    data: {
+      name: DEFAULT_BUDGET.name,
+      limit: DEFAULT_BUDGET.limit,
+      userId,
+      categories: {
+        create: categories.map((c) => ({ categoryId: c.id })),
+      },
+    },
+  });
+
+  console.log(`  Budget: seeded "${DEFAULT_BUDGET.name}" with ${categories.length} categories`);
 }
 
 async function main() {
@@ -89,8 +178,10 @@ async function main() {
 
   for (const user of users) {
     console.log(`User: ${user.email}`);
-    await seedCategories(user.id, user.email);
-    await seedWallets(user.id, user.email);
+    await seedCategories(user.id);
+    await seedWallets(user.id);
+    await seedRecurrings(user.id);
+    await seedBudget(user.id);
     console.log('');
   }
 

@@ -3,7 +3,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { Prisma } from '@prisma/client';
+import { CategoryType, Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateBudgetDto } from './dto/create-budget.dto';
 import { UpdateBudgetDto } from './dto/update-budget.dto';
@@ -167,6 +167,35 @@ export class BudgetService {
     await this.findOne(id, userId);
     await this.prisma.db.budget.delete({ where: { id } });
     return { message: 'Budget berhasil dihapus' };
+  }
+
+  async seedDefaults(userId: string) {
+    const existing = await this.prisma.db.budget.count({
+      where: { userId },
+    });
+    if (existing > 0) return;
+
+    const categories = await this.prisma.db.category.findMany({
+      where: {
+        userId,
+        type: CategoryType.EXPENSE,
+        name: { in: ['Makanan & Minuman', 'Transportasi'] },
+      },
+      select: { id: true },
+    });
+
+    if (categories.length === 0) return;
+
+    await this.prisma.db.budget.create({
+      data: {
+        name: 'Budget Bulanan',
+        limit: 1000000,
+        userId,
+        categories: {
+          create: categories.map((c) => ({ categoryId: c.id })),
+        },
+      },
+    });
   }
 
   private async calculateSpent(

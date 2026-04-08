@@ -94,4 +94,20 @@ export class BudgetController {
   remove(@Param('id') id: string, @CurrentUser() user: { id: string }) {
     return this.budgetService.remove(id, user.id);
   }
+
+  @Post('seed')
+  @Roles('ADMIN')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary:
+      'Seed default budget: Makanan + Transportasi, 1jt/bulan (skip jika sudah ada)',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Default budget berhasil di-seed',
+  })
+  async seed(@CurrentUser() user: { id: string }) {
+    await this.budgetService.seedDefaults(user.id);
+    return { message: 'Default budget berhasil di-seed' };
+  }
 }

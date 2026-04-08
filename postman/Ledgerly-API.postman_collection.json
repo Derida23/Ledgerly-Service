@@ -168,6 +168,20 @@
           }
         },
         {
+          "name": "Seed Default Recurring (6)",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/recurrings/seed"
+          }
+        },
+        {
+          "name": "Seed Default Budget (1)",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/budgets/seed"
+          }
+        },
+        {
           "name": "Load Wallets → save IDs",
           "event": [
             {
