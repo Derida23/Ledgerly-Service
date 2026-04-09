@@ -178,7 +178,7 @@ export class WalletService {
         e.code === 'P2003'
       ) {
         throw new ConflictException(
-          'Wallet tidak bisa dihapus karena masih memiliki transaksi',
+          'Wallet tidak bisa dihapus karena masih digunakan oleh transaksi atau recurring',
         );
       }
       throw e;
